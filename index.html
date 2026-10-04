@@ -99,7 +99,8 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
 .gl{position:absolute;left:0;right:0;border-top:1px dashed var(--mut);opacity:.6;pointer-events:none}
 .pr{padding:10px 0;border-top:1px solid var(--line)}
 .pr .n{font-weight:500}
-.pr .row{margin:6px 0 0}
+.pr .row{margin:6px 0 0;flex-wrap:wrap}
+.pr .row input,.pr .row select{flex:1 1 90px}
 @media (max-width:600px){dialog{margin:auto 0 0;width:100%;max-width:none;border-radius:20px 20px 0 0}.sc{gap:12px}.ringw{width:112px;height:112px}}
 </style>
 </head>
@@ -339,6 +340,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     var qb=e.u==="piece"?e.q*(e.pw||pr.pw||0):e.q;
     return {c:pr.price*qb/pr.pq,ok:true};
   }
+  function pkm(d){return d.pm==="pk"||(d.pq>0&&d.pq!==1000)}
   function prange(){
     if(pmode==="day")return [date,date];
     if(pmode==="week"){var m=monday(date);return [m,plus(m,6)]}
@@ -389,9 +391,10 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     arr.forEach(function(p){if(!(p.price>0))miss++});
     arr.sort(function(a,b){return (a.price>0)-(b.price>0)});
     if(arr.length){
-      h+='<details class="dtl" style="margin-top:12px"'+(miss?' open':'')+'><summary>Prix des produits'+(miss?' ('+miss+' à compléter)':'')+'</summary><p class="sum">Indique le prix payé et la quantité achetée, en g ou mL (6 œufs de 50 g : 300).</p>';
+      h+='<details class="dtl" style="margin-top:12px"'+(miss?' open':'')+'><summary>Prix des produits'+(miss?' ('+miss+' à compléter)':'')+'</summary><p class="sum">Indique le prix comme affiché en magasin : au kg / L, ou celui du paquet avec son poids. Le coût est calculé sur ce que tu manges (1,99 €/kg : 100 g = 0,20 €).</p>';
       arr.forEach(function(p){
-        h+='<div class="pr"><div class="n">'+esc(p.name)+'</div><div class="row"><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="Prix (€)" value="'+(p.price>0?p.price:'')+'" aria-label="Prix payé pour '+esc(p.name)+'"><input type="number" min="0" step="any" inputmode="decimal" placeholder="pour (g/mL)" value="'+(p.pq>0?p.pq:'')+'" aria-label="Quantité achetée de '+esc(p.name)+'"><button class="pri" data-setprice="'+p.id+'">OK</button></div></div>';
+        var pk=pkm({pq:p.pq});
+        h+='<div class="pr"><div class="n">'+esc(p.name)+'</div><div class="row"><input class="pp" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Prix (€)" value="'+(p.price>0?p.price:'')+'" aria-label="Prix de '+esc(p.name)+'"><select class="pm" aria-label="Type de prix"><option value="kg">€ au kg / L</option><option value="pk"'+(pk?' selected':'')+'>€ le paquet</option></select><input class="pqi" type="number" min="0" step="any" inputmode="decimal" placeholder="g ou mL du paquet" value="'+(pk?p.pq:'')+'"'+(pk?'':' hidden')+' aria-label="Quantité du paquet"><button class="pri" data-setprice="'+p.id+'">OK</button></div></div>';
       });
       h+='</details>';
     }
@@ -478,7 +481,8 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
         '<label>Unité<select id="fu"><option value="g">g</option><option value="ml">mL</option></select></label>'+fld("fq","Quantité",100)+'</div>'+
         fld("fw","Poids d\'une pièce en g (facultatif, ex. 50 pour un œuf)",draft.w)+'<p class="sum">Si tu le renseignes, tu choisiras ensuite le nombre de pièces.</p>'+
         '<p class="sum">Valeurs pour 100 g (ou 100 mL), comme indiquées sur l\'emballage :</p>'+
-        '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+fld("ff","Fibres (g, facultatif)",draft.f)+'<div class="g2">'+fld("pp","Prix payé (€, facultatif)",draft.price)+fld("pq","pour (g ou mL)",draft.pq)+'</div><p class="sum">Ex. : 6 œufs de 50 g à 2,10 € → quantité 300. Le prix sert à estimer le coût de tes repas.</p>'+
+        '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+fld("ff","Fibres (g, facultatif)",draft.f)+'<div class="g2">'+fld("pp","Prix (€, facultatif)",draft.price)+'<label>Prix indiqué<select id="pm"><option value="kg">au kg / au L</option><option value="pk"'+(pkm(draft)?' selected':'')+'>du paquet</option></select></label></div>'+
+        '<div id="pqw"'+(pkm(draft)?'':' hidden')+'>'+fld("pq","Quantité du paquet (g ou mL)",pkm(draft)?draft.pq:"")+'</div><p class="sum">Saisis le prix comme en magasin : le coût est ensuite calculé sur la quantité que tu manges (1,99 €/kg et 100 g = 0,20 €).</p>'+
         '<p class="err" id="err" role="alert"></p>'+
         '<div class="foot"><button id="back">Retour</button><button class="pri" id="savenew">Enregistrer et ajouter</button></div>';
     }
@@ -524,7 +528,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
       var it=its.filter(function(x){return x.currency==="EUR"&&x.price>0})[0];
       if(it){
         draft.price=Math.round(it.price*100)/100;
-        if(it.price_per==="KILOGRAM")draft.pq=1000;
+        if(it.price_per==="KILOGRAM")draft.pq=1000;else if(!draft.pq)draft.pm="pk";
         msg+=" Prix indicatif trouvé sur Open Prices"+(it.date?" ("+it.date+")":"")+" : vérifie-le"+(draft.pq?"":" et indique la quantité")+".";
       }
     }catch(e){}
@@ -588,7 +592,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     else if(t.dataset.day){date=t.dataset.day;all()}
     else if(t.dataset.pmode){pmode=t.dataset.pmode;renderPrix()}
     else if(t.dataset.setprice){
-      var row=t.closest(".pr"),ins=row.querySelectorAll("input"),pr2=D.products.filter(function(x){return x.id===t.dataset.setprice})[0],a2=num(ins[0].value),b2=num(ins[1].value);
+      var row=t.closest(".pr"),pr2=D.products.filter(function(x){return x.id===t.dataset.setprice})[0],a2=num(row.querySelector(".pp").value),b2=row.querySelector(".pm").value==="kg"?1000:num(row.querySelector(".pqi").value);
       if(pr2){if(a2>0&&b2>0){pr2.price=a2;pr2.pq=b2}else{delete pr2.price;delete pr2.pq}save();renderPrix()}
     }
     else if(t.id==="prev"||t.id==="next"){var p=date.split("-");date=iso(new Date(+p[0],+p[1]-1,+p[2]+(t.id==="next"?1:-1)));all()}
@@ -635,7 +639,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
       var q2=num($("fq").value)||100,code=$("fc").value.trim();
       var p={id:uid(),code:code,name:name,u:$("fu").value,k100:num(k),p100:num($("fp").value),c100:num($("fg").value),l100:num($("fl").value),f100:num($("ff").value)};
       var pwv=num($("fw").value);if(pwv>0&&p.u==="g")p.pw=pwv;
-      var ppv=num($("pp").value),pqv=num($("pq").value);if(ppv>0&&pqv>0){p.price=ppv;p.pq=pqv}
+      var ppv=num($("pp").value),pqv=$("pm").value==="kg"?1000:num($("pq").value);if(ppv>0&&pqv>0){p.price=ppv;p.pq=pqv}
       D.products.push(p);
       if(p.pw){sel=Object.assign({},p,{lastu:"piece",lastq:1});view="qty";renderDlg()}else addEntry(p,q2);
     }
@@ -645,6 +649,8 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     if(t.id==="bk")impArm=false;
     else if(t.id==="sq")$("pl").innerHTML=listHtml(t.value);
     else if(t.id==="qq")updPrev();
+    else if(t.id==="pm"){$("pqw").hidden=t.value==="kg"}
+    else if(t.classList.contains("pm")){t.closest(".pr").querySelector(".pqi").hidden=t.value==="kg"}
     else if(t.id==="qu"){$("qq").value=t.value==="piece"?1:100;updPrev()}
     else if(t.id==="rn")rd.name=t.value;
     else if(t.id==="rp"){rd.portions=num(t.value);updRec()}
