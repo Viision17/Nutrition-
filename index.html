@@ -4,112 +4,138 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Suivi nutrition</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
-:root{--bg:#eef2ef;--card:#fff;--ink:#14281f;--mut:#5b6f64;--line:#d3ddd6;--acc:#0f8a5f;--acc-ink:#fff;--p:#2f5bff;--c:#d49400;--l:#9b5de5;--bad:#d64545;
+:root{--bg:#f5f6f3;--card:#fff;--ink:#1d2621;--mut:#6c7872;--line:#e7eae6;--soft:#eef1ed;--acc:#2f7d5b;--acc-ink:#fff;--p:#5b7bd5;--c:#d9a441;--l:#a07ad8;--bad:#c9534b;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1913;--card:#16251c;--ink:#e8f5ee;--mut:#98b0a2;--line:#27402f;--acc:#3ec78f;--acc-ink:#0e1913;--p:#7f9bff;--c:#f0b429;--l:#bb8cf5;--bad:#ff7a7a}}
-:root[data-theme="dark"]{--bg:#0e1913;--card:#16251c;--ink:#e8f5ee;--mut:#98b0a2;--line:#27402f;--acc:#3ec78f;--acc-ink:#0e1913;--p:#7f9bff;--c:#f0b429;--l:#bb8cf5;--bad:#ff7a7a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111613;--card:#1a211d;--ink:#e9efeb;--mut:#92a09a;--line:#27302b;--soft:#242d28;--acc:#5fbf94;--acc-ink:#0f1612;--p:#8fa8ee;--c:#ecbf62;--l:#b99cea;--bad:#ef8a83}}
+:root[data-theme="dark"]{--bg:#111613;--card:#1a211d;--ink:#e9efeb;--mut:#92a09a;--line:#27302b;--soft:#242d28;--acc:#5fbf94;--acc-ink:#0f1612;--p:#8fa8ee;--c:#ecbf62;--l:#b99cea;--bad:#ef8a83}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif}
-main{max-width:720px;margin:0 auto;padding:20px 16px 60px}
-h1,h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;margin:0}
-h1{font-size:2.4rem;line-height:1.05}
-h2{font-size:1.5rem}
-button,input{font:inherit;color:inherit}
-button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;min-height:40px}
-button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
-.del{color:var(--bad);border-color:transparent;background:transparent;padding:4px 10px}
-input[type=text],input[type=number],input:not([type]){padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);min-height:40px;min-width:0}
-.date{display:flex;gap:8px;align-items:center;margin:10px 0 16px;flex-wrap:wrap}
-.date b{flex:1;min-width:150px;text-transform:capitalize}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px}
-.m{margin-bottom:12px}
-.m:last-child{margin-bottom:0}
-.m .h{display:flex;justify-content:space-between;font-weight:600}
-.m .h small{color:var(--mut);font-weight:400}
-.bar{height:10px;background:var(--bg);border-radius:99px;overflow:hidden;margin:4px 0 2px;border:1px solid var(--line)}
-.bar span{display:block;height:100%;background:var(--col)}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:560px;margin:0 auto;padding:12px 16px 100px}
+.sr{position:absolute;left:-9999px}
+h2{font-size:1.05rem;font-weight:650;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:var(--soft);border-radius:12px;padding:10px 14px;min-height:44px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.pri{background:var(--acc);color:var(--acc-ink);font-weight:600}
+.gh{background:transparent;color:var(--acc);font-weight:600}
+.x{background:transparent;color:var(--mut);padding:0;min-height:36px;min-width:36px;font-size:1.3rem;line-height:1}
+.del{background:transparent;color:var(--bad);padding:6px 10px;min-height:36px}
+.wide{width:100%}
+input[type=text],input[type=number],input:not([type]),select,textarea{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+textarea{font:.8rem/1.4 monospace;margin-top:8px}
+label{font-size:.78rem;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(20,30,25,.06)}
+.date{display:flex;align-items:center;gap:4px;margin:2px 0 14px}
+.date b{flex:1;text-align:center;text-transform:capitalize;font-weight:600}
+.date button:not(.gh){min-width:44px;background:transparent;font-size:1.5rem;padding:0}
+.sc{display:flex;gap:18px;align-items:center}
+.ringw{position:relative;width:128px;height:128px;flex:none}
+.ring{width:100%;height:100%}
+.rb{fill:none;stroke:var(--soft);stroke-width:9}
+.rf{fill:none;stroke:var(--acc);stroke-width:9;stroke-linecap:round}
+.rf.over{stroke:var(--bad)}
+.rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.rc b{font-size:1.6rem;line-height:1.1}
+.rc span{font-size:.72rem;color:var(--mut)}
+.mac{flex:1;min-width:0;display:grid;gap:11px}
+.mr .h{display:flex;justify-content:space-between;font-size:.85rem}
+.mr .h span{color:var(--mut)}
+.bar{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:5px}
+.bar span{display:block;height:100%;background:var(--col);border-radius:99px}
 .bar.over span{background:var(--bad)}
-details{margin-bottom:12px}
-summary{cursor:pointer;font-weight:600;padding:6px 0}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.hint{margin:12px 0 0;font-size:.85rem;color:var(--mut)}
+.mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.mh span{color:var(--mut);font-size:.9rem}
+.it{display:grid;grid-template-columns:1fr auto;gap:0 12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.it .n{font-weight:500;overflow-wrap:anywhere}
+.it .k{font-weight:600}
+.it .m,.it small{color:var(--mut);font-size:.8rem;display:block}
+.qd{display:flex;align-items:center;justify-content:flex-end;gap:4px;color:var(--mut);font-size:.85rem}
+.it .q{width:68px;min-height:36px;padding:4px 8px;text-align:right}
+.addrow{width:100%;text-align:left;padding-left:0;margin-top:2px}
+.empty{color:var(--mut);font-size:.9rem;padding:6px 0}
+.sum{color:var(--mut);font-size:.88rem;margin:6px 0}
+.sec{margin:14px 0 6px;font-weight:600;font-size:.85rem;color:var(--mut)}
 .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
-label{font-size:.82rem;color:var(--mut);display:flex;flex-direction:column;gap:2px}
-label input{width:100%}
-.sum{color:var(--mut);font-size:.9rem;margin:6px 0}
-.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.it{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
-.it small{display:block;color:var(--mut)}
-.it .q{width:76px}
-.empty{color:var(--mut);padding:6px 0}
-dialog{max-height:90vh;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:16px;max-width:520px;width:calc(100% - 24px);background:var(--card);color:var(--ink)}
-dialog::backdrop{background:rgba(0,0,0,.55)}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row{display:flex;gap:8px;margin:8px 0}
 .row input{flex:1}
-.wide{width:100%}
-video{width:100%;border-radius:8px;margin-top:8px;background:#000}
-.pl{max-height:220px;overflow:auto;margin:8px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 12px;min-height:36px;border-radius:99px;font-size:.88rem}
+.chip small{color:var(--mut);margin-left:4px}
+.pl{max-height:200px;overflow:auto;margin:6px 0}
 .pl button{display:flex;justify-content:space-between;width:100%;text-align:left;margin-bottom:6px;gap:8px}
+.pl small{color:var(--mut)}
+.wide small{display:block;color:var(--mut);font-weight:400;white-space:normal}
+details.dtl summary{cursor:pointer;color:var(--acc);font-weight:600;padding:8px 0}
+dialog{max-height:88vh;overflow:auto;border:0;border-radius:20px;padding:18px;max-width:520px;width:calc(100% - 24px);background:var(--card);color:var(--ink);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,15,12,.5)}
+.dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.dh h2{font-size:1.15rem}
+.foot{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+video{width:100%;border-radius:12px;margin-top:8px;background:#000}
 .err{color:var(--bad);min-height:1.2em}
-.sec{margin:12px 0 4px;font-weight:600}
-textarea{width:100%;margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font:.8rem/1.4 monospace;color:inherit}
-select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);min-height:40px;width:100%}
-.foot{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-@media (max-width:480px){.g4{grid-template-columns:repeat(2,1fr)}.it{grid-template-columns:1fr auto auto}.it .kc{grid-column:1}}
+.tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:4px;background:var(--card);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+.tabbar button{flex:1;max-width:140px;background:transparent;color:var(--mut);font-size:.8rem;font-weight:600;padding:8px 4px;min-height:48px}
+.tabbar button[aria-current="page"]{color:var(--acc);background:var(--soft)}
+@media (max-width:600px){dialog{margin:auto 0 0;width:100%;max-width:none;border-radius:20px 20px 0 0}.sc{gap:12px}.ringw{width:112px;height:112px}}
 </style>
 </head>
 <body>
 <main>
-  <h1>Suivi nutrition</h1>
-  <div class="date">
+  <h1 class="sr">Suivi nutrition</h1>
+  <div class="date" data-tab="journal poids">
     <button id="prev" aria-label="Jour précédent">‹</button>
     <b id="dlabel"></b>
+    <button id="today" class="gh" hidden>Aujourd'hui</button>
     <button id="next" aria-label="Jour suivant">›</button>
-    <button id="today">Aujourd'hui</button>
   </div>
 
-  <div class="card" id="totals" aria-live="polite"></div>
+  <div data-tab="journal"><div class="card" id="totals" aria-live="polite"></div><div id="meals"></div></div>
 
-  <details class="card" id="wdet">
-    <summary>Poids</summary>
-    <div class="row"><input id="wv" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Poids du jour (kg)" aria-label="Poids du jour en kg"><button class="pri" id="wadd">Enregistrer</button></div>
+  <div data-tab="poids"><div class="card">
+    <h2>Poids</h2>
+    <p class="sum">La pesée est enregistrée pour le jour affiché ci-dessus.</p>
+    <div class="row"><input id="wv" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Poids (kg)" aria-label="Poids du jour en kg"><button class="pri" id="wadd">Enregistrer</button></div>
     <div id="wlist"></div>
-  </details>
+  </div></div>
 
-  <details class="card">
-    <summary>Mes objectifs</summary>
-    <div class="g3">
-      <label>Calories (kcal)<input type="number" min="0" step="any" id="gk" inputmode="numeric"></label>
-      <label>Protéines (g/kg)<input type="number" min="0" step="0.05" id="gp" inputmode="decimal"></label>
-      <label>Lipides (g/kg)<input type="number" min="0" step="0.05" id="gl" inputmode="decimal"></label>
-    </div>
-    <p class="sum" id="gh"></p>
-  </details>
-
-  <details class="card">
-    <summary>Mes recettes</summary>
+  <div data-tab="recettes"><div class="card">
+    <h2>Mes recettes</h2>
     <div id="reclist"></div>
-    <button class="pri wide" data-newrec="1" style="margin-top:8px">Créer une recette</button>
-  </details>
+    <button class="pri wide" data-newrec="1" style="margin-top:12px">Créer une recette</button>
+  </div></div>
 
-  <div id="meals"></div>
-
-  <details class="card">
-    <summary>Sauvegarde</summary>
-    <p class="sum">Exporte tes données pour les garder ou les transférer vers un autre appareil ou une autre adresse, puis colle-les dans l'appli de destination.</p>
-    <div class="row"><button id="exp">Exporter</button><button id="copy">Copier</button><button id="imp" class="pri">Importer</button></div>
-    <textarea id="bk" rows="5" aria-label="Données de sauvegarde" placeholder="Les données exportées apparaissent ici. Pour importer, colle-les ici."></textarea>
-    <p class="sum" id="bkmsg" role="status"></p>
-  </details>
-
-  <p class="sum">Données produits : Open Food Facts, base collaborative ouverte (licence ODbL).</p>
-
-  <dialog id="dlg" aria-label="Ajouter un aliment"><div id="dbody"></div></dialog>
+  <div data-tab="reglages">
+    <div class="card">
+      <h2>Objectifs</h2>
+      <div class="g3" style="margin-top:12px">
+        <label>Calories (kcal)<input type="number" min="0" step="any" id="gk" inputmode="numeric"></label>
+        <label>Protéines (g/kg)<input type="number" min="0" step="0.05" id="gp" inputmode="decimal"></label>
+        <label>Lipides (g/kg)<input type="number" min="0" step="0.05" id="gl" inputmode="decimal"></label>
+      </div>
+      <p class="sum" id="gh"></p>
+    </div>
+    <div class="card">
+      <h2>Sauvegarde</h2>
+      <p class="sum">Exporte tes données pour les garder ou les transférer vers un autre appareil, puis colle-les dans l'appli de destination.</p>
+      <div class="row"><button id="exp">Exporter</button><button id="copy">Copier</button><button id="imp" class="pri">Importer</button></div>
+      <textarea id="bk" rows="5" aria-label="Données de sauvegarde" placeholder="Les données exportées apparaissent ici. Pour importer, colle-les ici."></textarea>
+      <p class="sum" id="bkmsg" role="status"></p>
+    </div>
+    <p class="sum">Données produits : Open Food Facts, base collaborative ouverte (licence ODbL).</p>
+  </div>
 </main>
+
+<nav class="tabbar" aria-label="Navigation principale">
+  <button data-go="journal">Journal</button><button data-go="poids">Poids</button><button data-go="recettes">Recettes</button><button data-go="reglages">Réglages</button>
+</nav>
+
+<dialog id="dlg" aria-label="Ajouter un aliment"><div id="dbody"></div></dialog>
 <script>
 (function(){
   var KEY="nutrition-v1",$=function(i){return document.getElementById(i)};
@@ -120,7 +146,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
   D.weights=D.weights||{};if(D.goals.pk==null)D.goals.pk=1.9;if(D.goals.lk==null)D.goals.lk=0.9;
   var pad=function(n){return n<10?"0"+n:""+n};
   var iso=function(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
-  var date=iso(new Date());
+  var date=iso(new Date()),tab="journal";
   var uid=function(){return Math.random().toString(36).slice(2,9)};
   var r1=function(x){return Math.round(x*10)/10};
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -128,37 +154,46 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
   function num(v){var n=parseFloat(v);return isNaN(n)||n<0?0:n}
   function log(create){if(!D.log[date]){if(!create)return {};D.log[date]={matin:[],midi:[],soir:[],collation:[]}}return D.log[date]}
   function fc(u,pw){return u==="piece"?(pw||0)/100:u==="portion"?1:0.01}
-  function v(e,k){return e[k+"100"]*e.q*fc(e.u,e.pw)}
+  function v(e,k){return (e[k+"100"]||0)*e.q*fc(e.u,e.pw)}
 
   /* ---------- Affichage ---------- */
   function renderTotals(){
-    var t={k:0,p:0,c:0,l:0},L=log(false),T=targets();
-    MEALS.forEach(function(m){(L[m[0]]||[]).forEach(function(e){["k","p","c","l"].forEach(function(x){t[x]+=v(e,x)})})});
-    var rows=[["k","Calories","kcal","--acc"],["p","Protéines","g","--p"],["c","Glucides","g","--c"],["l","Lipides","g","--l"]];
-    $("totals").innerHTML=rows.map(function(r){
-      var g=T[r[0]]||0,cur=t[r[0]],pct=g?Math.min(100,cur/g*100):0,diff=g-cur;
-      var txt=g?(diff>=0?"reste "+r1(diff)+" "+r[2]:"dépassé de "+r1(-diff)+" "+r[2]):(r[0]!=="k"&&!T.w?"ajoute ton poids":"pas d'objectif");
-      return '<div class="m"><div class="h"><span>'+r[1]+'</span><small>'+r1(cur)+' / '+g+' '+r[2]+' ('+txt+')</small></div>'+
-        '<div class="bar'+(g&&cur>g?' over':'')+'" style="--col:var('+r[3]+')"><span style="width:'+pct+'%"></span></div></div>';
-    }).join("");
+    var t={k:0,p:0,c:0,l:0,f:0},L=log(false),T=targets();
+    MEALS.forEach(function(m){(L[m[0]]||[]).forEach(function(e){["k","p","c","l","f"].forEach(function(x){t[x]+=v(e,x)})})});
+    var g=T.k||0,rest=g-t.k,C=2*Math.PI*52,pct=g?Math.min(1,t.k/g):0;
+    var mid=g?'<b>'+Math.abs(Math.round(rest))+'</b><span>kcal '+(rest>=0?'restantes':'en trop')+'</span>':'<b>'+Math.round(t.k)+'</b><span>kcal</span>';
+    var h='<div class="sc"><div class="ringw"><svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="rb" cx="60" cy="60" r="52"/><circle class="rf'+(g&&t.k>g?' over':'')+'" cx="60" cy="60" r="52" transform="rotate(-90 60 60)" stroke-dasharray="'+(pct*C).toFixed(1)+' '+C.toFixed(1)+'"/></svg><div class="rc">'+mid+'</div></div><div class="mac">';
+    [["p","Protéines","--p"],["c","Glucides","--c"],["l","Lipides","--l"]].forEach(function(r){
+      var goal=T[r[0]]||0,cur=t[r[0]],pc=goal?Math.min(100,cur/goal*100):0;
+      h+='<div class="mr"><div class="h"><b>'+r[1]+'</b><span>'+Math.round(cur)+(goal?' / '+goal:'')+' g</span></div><div class="bar'+(goal&&cur>goal?' over':'')+'" style="--col:var('+r[2]+')"><span style="width:'+pc+'%"></span></div></div>';
+    });
+    h+='<div class="mr"><div class="h"><b>Fibres</b><span>'+r1(t.f)+' g</span></div></div></div></div>';
+    if(!T.w)h+='<p class="hint">Ajoute ton poids pour calculer tes macros. <button class="gh" data-go="poids" style="min-height:32px;padding:0 4px">Ouvrir Poids</button></p>';
+    $("totals").innerHTML=h;
   }
   function renderMeals(){
     var L=log(false);
     $("meals").innerHTML=MEALS.map(function(m){
       var items=L[m[0]]||[],kc=0;items.forEach(function(e){kc+=v(e,"k")});
       var h='<section class="card"><div class="mh"><h2>'+m[1]+'</h2><span>'+Math.round(kc)+' kcal</span></div>';
-      if(!items.length)h+='<div class="empty">Rien d\'ajouté pour ce repas.</div>';
+      if(!items.length)h+='<div class="empty">Rien pour le moment.</div>';
       items.forEach(function(e){
-        h+='<div class="it" data-m="'+m[0]+'" data-id="'+e.id+'"><div>'+esc(e.name)+'<small>P '+r1(v(e,"p"))+' g, G '+r1(v(e,"c"))+' g, L '+r1(v(e,"l"))+' g</small></div>'+
-          '<label>'+ul(e.u)+'<input class="q" type="number" min="0" step="any" inputmode="decimal" value="'+e.q+'" aria-label="Quantité"></label>'+
-          '<b class="kc">'+Math.round(v(e,"k"))+' kcal</b><button class="del" data-del="1" aria-label="Retirer '+esc(e.name)+'">Retirer</button></div>';
+        var fb=v(e,"f");
+        h+='<div class="it" data-m="'+m[0]+'" data-id="'+e.id+'"><span class="n">'+esc(e.name)+'</span><span class="k">'+Math.round(v(e,"k"))+' kcal</span>'+
+          '<span class="m">P '+r1(v(e,"p"))+' · G '+r1(v(e,"c"))+' · L '+r1(v(e,"l"))+(fb>0?' · Fib. '+r1(fb):'')+'</span>'+
+          '<span class="qd"><input class="q" type="number" min="0" step="any" inputmode="decimal" value="'+e.q+'" aria-label="Quantité de '+esc(e.name)+'"><span>'+ul(e.u)+'</span><button class="x" data-del="1" aria-label="Retirer '+esc(e.name)+'">×</button></span></div>';
       });
-      return h+'<button class="pri wide" data-add="'+m[0]+'" style="margin-top:8px">Ajouter un aliment</button></section>';
+      return h+'<button class="gh addrow" data-add="'+m[0]+'">+ Ajouter un aliment</button></section>';
     }).join("");
   }
   function renderDate(){
     var p=date.split("-"),d=new Date(+p[0],+p[1]-1,+p[2]);
     $("dlabel").textContent=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+    $("today").hidden=(date===iso(new Date()));
+  }
+  function showTab(){
+    document.querySelectorAll("[data-tab]").forEach(function(el){el.hidden=el.dataset.tab.split(" ").indexOf(tab)<0});
+    document.querySelectorAll(".tabbar button").forEach(function(b){if(b.dataset.go===tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   }
   function hint(){
     var T=targets(),g=D.goals,h;
@@ -170,7 +205,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     }
     $("gh").textContent=h;
   }
-  function all(){renderDate();renderW();renderTotals();renderMeals();renderRecs();hint()}
+  function all(){renderDate();renderW();renderTotals();renderMeals();renderRecs();hint();showTab()}
 
   /* ---------- Objectifs ---------- */
   [["k","gk"],["pk","gp"],["lk","gl"]].forEach(function(a){
@@ -252,7 +287,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     return r.map(function(p){return '<button data-pick="'+p.id+'"><span>'+esc(p.name)+'</span><small>'+p.k100+' kcal / '+per(p)+'</small></button>'}).join("");
   }
   function fld(id,l,val,extra){return '<label>'+l+'<input id="'+id+'" '+(extra||'type="number" min="0" step="any" inputmode="decimal"')+' value="'+esc(val==null?"":val)+'"></label>'}
-  function recTot(){var t={k:0,p:0,c:0,l:0};rd.ing.forEach(function(e){["k","p","c","l"].forEach(function(x){t[x]+=v(e,x)})});return t}
+  function recTot(){var t={k:0,p:0,c:0,l:0,f:0};rd.ing.forEach(function(e){["k","p","c","l","f"].forEach(function(x){t[x]+=v(e,x)})});return t}
   function updRec(){
     var el=$("rtot");if(!el)return;
     var t=recTot(),n=rd.portions>0?rd.portions:1;
@@ -262,21 +297,19 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     stopScan();
     var h='';
     if(view==="pick"){
-      h='<h2>'+(recMode?'Ajouter un ingrédient':'Ajouter au repas : '+mealName())+'</h2>';
+      h='<div class="dh"><h2>'+(recMode?'Ajouter un ingrédient':mealName())+'</h2><button class="x" id="'+(recMode?'backrec':'close')+'" aria-label="'+(recMode?'Retour à la recette':'Fermer')+'">×</button></div>'+
+        '<div class="row"><input id="sq" placeholder="Rechercher un aliment" aria-label="Rechercher un aliment"><button class="pri" id="scan">Scanner</button></div>'+
+        '<video id="vid" playsinline muted hidden></video><p class="sum" id="msg" role="status">'+esc(msg)+'</p>';
       if(!recMode){
         var lm=lastMeal();
-        if(lm)h+='<p class="sec">Dernier « '+mealName()+' » ('+dfr(lm.d)+')</p><p class="sum">'+lm.items.map(function(e){return esc(e.name)}).join(", ")+'</p><button class="wide" data-copy="1">Tout ajouter</button>';
+        if(lm)h+='<button class="wide" data-copy="1" style="text-align:left;margin-bottom:8px">Reprendre le dernier « '+mealName()+' » ('+dfr(lm.d)+')<small>'+lm.items.map(function(e){return esc(e.name)}).join(", ")+'</small></button>';
         rcList=recents();
-        if(rcList.length)h+='<p class="sec">Récents</p><div class="pl">'+rcList.map(function(e,i){return '<button data-recent="'+i+'"><span>'+esc(e.name)+'</span><small>'+e.q+' '+ul(e.u)+'</small></button>'}).join("")+'</div>';
+        if(rcList.length)h+='<p class="sec">Récents</p><div class="chips">'+rcList.map(function(e,i){return '<button class="chip" data-recent="'+i+'">'+esc(e.name)+'<small>'+e.q+' '+ul(e.u)+'</small></button>'}).join("")+'</div>';
       }
-      h+='<button id="scan" class="pri wide" style="margin-top:10px">Scanner un code-barres</button>'+
-        '<video id="vid" playsinline muted hidden></video>'+
-        '<div class="row"><input id="bc" inputmode="numeric" placeholder="ou saisis le code-barres" aria-label="Code-barres"><button id="bcgo">Chercher</button></div>'+
-        '<p class="sum" id="msg" role="status">'+esc(msg)+'</p>'+
-        '<input id="sq" class="wide" placeholder="Rechercher dans mes produits" aria-label="Rechercher dans mes produits">'+
-        '<div class="pl" id="pl">'+listHtml("")+'</div>'+
-        '<button id="offs" class="wide">Chercher sur Open Food Facts</button><div class="pl" id="offl"></div>'+
-        '<div class="foot"><button id="newp">Créer un produit</button>'+(recMode?'<button id="backrec">Retour à la recette</button>':'<button data-newrec="1">Créer une recette</button><button id="close">Fermer</button>')+'</div>';
+      h+='<p class="sec">Mes produits</p><div class="pl" id="pl">'+listHtml("")+'</div>'+
+        '<button class="gh" id="offs">Chercher sur Open Food Facts</button><div class="pl" id="offl"></div>'+
+        '<details class="dtl"><summary>Saisir un code-barres à la main</summary><div class="row"><input id="bc" inputmode="numeric" placeholder="Code-barres" aria-label="Code-barres"><button id="bcgo">Chercher</button></div></details>'+
+        '<div class="foot"><button id="newp">Créer un produit</button>'+(recMode?'':'<button data-newrec="1">Créer une recette</button>')+'</div>';
     }else if(view==="qty"){
       h='<h2>'+esc(sel.name)+'</h2><p class="sum">Pour '+per(sel)+' : '+sel.k100+' kcal, P '+sel.p100+' g, G '+sel.c100+' g, L '+sel.l100+' g</p>'+
         (sel.pw&&(sel.u||"g")==="g"?
@@ -300,7 +333,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
         '<label>Unité<select id="fu"><option value="g">g</option><option value="ml">mL</option></select></label>'+fld("fq","Quantité",100)+'</div>'+
         fld("fw","Poids d\'une pièce en g (facultatif, ex. 50 pour un œuf)",draft.w)+'<p class="sum">Si tu le renseignes, tu choisiras ensuite le nombre de pièces.</p>'+
         '<p class="sum">Valeurs pour 100 g (ou 100 mL), comme indiquées sur l\'emballage :</p>'+
-        '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+
+        '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+fld("ff","Fibres (g, facultatif)",draft.f)+
         '<p class="err" id="err" role="alert"></p>'+
         '<div class="foot"><button id="back">Retour</button><button class="pri" id="savenew">Enregistrer et ajouter</button></div>';
     }
@@ -310,7 +343,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
   }
   function updPrev(){
     var q=num($("qq").value),u=$("qu")?$("qu").value:sel.u,f=q*fc(u,sel.pw);
-    $("prev2").textContent=Math.round(sel.k100*f)+" kcal, P "+r1(sel.p100*f)+" g, G "+r1(sel.c100*f)+" g, L "+r1(sel.l100*f)+" g";
+    $("prev2").textContent=Math.round(sel.k100*f)+" kcal, P "+r1(sel.p100*f)+" g, G "+r1(sel.c100*f)+" g, L "+r1(sel.l100*f)+" g"+(sel.f100?", fibres "+r1(sel.f100*f)+" g":"");
   }
   function renderRecs(){
     var r=D.products.filter(function(p){return p.rec});
@@ -335,7 +368,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
         var kc=n["energy-kcal_100g"];
         if(kc==null&&n["energy_100g"]!=null)kc=n["energy_100g"]/4.184;
         if(kc!=null){
-          draft.k=r1(kc);draft.p=r1(n["proteins_100g"]||0);draft.c=r1(n["carbohydrates_100g"]||0);draft.l=r1(n["fat_100g"]||0);
+          draft.k=r1(kc);draft.p=r1(n["proteins_100g"]||0);draft.c=r1(n["carbohydrates_100g"]||0);draft.l=r1(n["fat_100g"]||0);draft.f=r1(n["fiber_100g"]||0);
           msg="Trouvé sur Open Food Facts : vérifie les valeurs avant d\'enregistrer.";
         }else msg="Produit trouvé sur Open Food Facts, mais sans valeurs nutritionnelles : complète-les.";
       }
@@ -351,7 +384,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     if(Array.isArray(b))b=b[0];
     b=String(b||"").split(",")[0].trim();
     var g=function(a,c){var x=n[a];return r1(x!=null?x:(n[c]||0))};
-    return {code:h.code||"",name:(h.product_name||"Sans nom")+(b?" ("+b+")":""),k:r1(k),p:g("proteins_100g","proteins"),c:g("carbohydrates_100g","carbohydrates"),l:g("fat_100g","fat")};
+    return {code:h.code||"",name:(h.product_name||"Sans nom")+(b?" ("+b+")":""),k:r1(k),p:g("proteins_100g","proteins"),c:g("carbohydrates_100g","carbohydrates"),l:g("fat_100g","fat"),f:g("fiber_100g","fiber")};
   }
   async function offSearch(){
     var q=($("sq").value||"").trim(),box=$("offl");
@@ -386,16 +419,17 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     },300);
   }
   function addEntry(p,q,u2){
-    if(recMode){rd.ing.push({name:p.name,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100});view="rec";renderDlg();return}
+    if(recMode){rd.ing.push({name:p.name,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100,f100:p.f100});view="rec";renderDlg();return}
     var L=log(true);
-    L[dm].push({id:uid(),name:p.name,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100});
+    L[dm].push({id:uid(),name:p.name,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100,f100:p.f100});
     save();stopScan();$("dlg").close();all();
   }
 
   /* ---------- Événements ---------- */
   document.addEventListener("click",function(e){
     var t=e.target.closest("button");if(!t)return;
-    if(t.id==="prev"||t.id==="next"){var p=date.split("-");date=iso(new Date(+p[0],+p[1]-1,+p[2]+(t.id==="next"?1:-1)));all()}
+    if(t.dataset.go){tab=t.dataset.go;showTab();window.scrollTo(0,0)}
+    else if(t.id==="prev"||t.id==="next"){var p=date.split("-");date=iso(new Date(+p[0],+p[1]-1,+p[2]+(t.id==="next"?1:-1)));all()}
     else if(t.id==="today"){date=iso(new Date());all()}
     else if(t.id==="exp"){var bk=$("bk");bk.value=JSON.stringify({app:"suivi-nutrition",v:1,data:D});bk.select();$("bkmsg").textContent="Données exportées. Copie ce texte et garde-le (notes, message à toi-même), ou colle-le dans l\'autre version de l\'appli."}
     else if(t.id==="copy"){
@@ -413,12 +447,12 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     else if(t.id==="scan"){scan()}
     else if(t.id==="bcgo"){lookup($("bc").value)}
     else if(t.id==="offs"){offSearch()}
-    else if(t.dataset.off){var o=offRes[+t.dataset.off];draft={code:o.code,name:o.name,k:o.k,p:o.p,c:o.c,l:o.l};view="new";msg="Trouvé sur Open Food Facts : vérifie les valeurs avant d\'enregistrer.";renderDlg()}
+    else if(t.dataset.off){var o=offRes[+t.dataset.off];draft={code:o.code,name:o.name,k:o.k,p:o.p,c:o.c,l:o.l,f:o.f};view="new";msg="Trouvé sur Open Food Facts : vérifie les valeurs avant d\'enregistrer.";renderDlg()}
     else if(t.dataset.pick){sel=D.products.filter(function(p){return p.id===t.dataset.pick})[0];view="qty";renderDlg()}
     else if(t.id==="newp"){view="new";draft={};msg="";renderDlg()}
     else if(t.id==="back"){view="pick";msg="";renderDlg()}
     else if(t.dataset.copy){var lm2=lastMeal();if(lm2){var Lc=log(true);lm2.items.forEach(function(e){Lc[dm].push(Object.assign({},e,{id:uid()}))});save();stopScan();$("dlg").close();all()}}
-    else if(t.dataset.recent){var e2=rcList[+t.dataset.recent];sel={name:e2.name,u:e2.u==="piece"?"g":e2.u,pw:e2.pw,lastu:e2.u==="piece"?"piece":"g",k100:e2.k100,p100:e2.p100,c100:e2.c100,l100:e2.l100,lastq:e2.q};view="qty";renderDlg()}
+    else if(t.dataset.recent){var e2=rcList[+t.dataset.recent];sel={name:e2.name,u:e2.u==="piece"?"g":e2.u,pw:e2.pw,lastu:e2.u==="piece"?"piece":"g",k100:e2.k100,p100:e2.p100,c100:e2.c100,l100:e2.l100,f100:e2.f100,lastq:e2.q};view="qty";renderDlg()}
     else if(t.dataset.newrec){recMode=true;rd={name:"",portions:1,ing:[]};if(!$("dlg").open){dm="";$("dlg").showModal()}view="rec";renderDlg()}
     else if(t.id==="recadd"){view="pick";msg="";renderDlg()}
     else if(t.id==="backrec"){view="rec";renderDlg()}
@@ -427,7 +461,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     else if(t.id==="recsave"){
       var nm=(rd.name||"").trim(),n=rd.portions>0?rd.portions:1;
       if(!nm||!rd.ing.length){$("err").textContent="Indique un nom et au moins un ingrédient.";return}
-      var tt=recTot(),rp={id:uid(),code:"",name:nm,u:"portion",rec:true,portions:n,ing:rd.ing,k100:r1(tt.k/n),p100:r1(tt.p/n),c100:r1(tt.c/n),l100:r1(tt.l/n)};
+      var tt=recTot(),rp={id:uid(),code:"",name:nm,u:"portion",rec:true,portions:n,ing:rd.ing,k100:r1(tt.k/n),p100:r1(tt.p/n),c100:r1(tt.c/n),l100:r1(tt.l/n),f100:r1(tt.f/n)};
       D.products.push(rp);save();recMode=false;renderRecs();
       if(dm){sel=rp;view="qty";renderDlg()}else{$("dlg").close()}
     }
@@ -437,7 +471,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
       var name=$("fn").value.trim(),k=$("fk").value;
       if(!name||k===""){$("err").textContent="Indique au moins le nom et les calories pour 100 g.";return}
       var q2=num($("fq").value)||100,code=$("fc").value.trim();
-      var p={id:uid(),code:code,name:name,u:$("fu").value,k100:num(k),p100:num($("fp").value),c100:num($("fg").value),l100:num($("fl").value)};
+      var p={id:uid(),code:code,name:name,u:$("fu").value,k100:num(k),p100:num($("fp").value),c100:num($("fg").value),l100:num($("fl").value),f100:num($("ff").value)};
       var pwv=num($("fw").value);if(pwv>0&&p.u==="g")p.pw=pwv;
       D.products.push(p);
       if(p.pw){sel=Object.assign({},p,{lastu:"piece",lastq:1});view="qty";renderDlg()}else addEntry(p,q2);
