@@ -340,6 +340,17 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     var qb=e.u==="piece"?e.q*(e.pw||pr.pw||0):e.q;
     return {c:pr.price*qb/pr.pq,ok:true};
   }
+  function syncForm(){
+    var ml=$("fu").value==="ml",U=ml?"mL":"g",o=document.querySelector('#pm option[value="kg"]');
+    if(o)o.textContent=ml?"au L":"au kg";
+    $("pql").textContent="Quantité du paquet ("+U+")";
+    $("vhint").textContent="Valeurs pour 100 "+U+", comme indiquées sur l\'emballage :";
+  }
+  function syncRow(r){
+    var ml=r.querySelector(".pu").value==="ml";
+    r.querySelector('.pm option[value="kg"]').textContent="€ "+(ml?"au L":"au kg");
+    r.querySelector(".pqi").hidden=r.querySelector(".pm").value==="kg";
+  }
   function pkm(d){return d.pm==="pk"||(d.pq>0&&d.pq!==1000)}
   function prange(){
     if(pmode==="day")return [date,date];
@@ -393,8 +404,8 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     if(arr.length){
       h+='<details class="dtl" style="margin-top:12px"'+(miss?' open':'')+'><summary>Prix des produits'+(miss?' ('+miss+' à compléter)':'')+'</summary><p class="sum">Indique le prix comme affiché en magasin : au kg / L, ou celui du paquet avec son poids. Le coût est calculé sur ce que tu manges (1,99 €/kg : 100 g = 0,20 €).</p>';
       arr.forEach(function(p){
-        var pk=pkm({pq:p.pq});
-        h+='<div class="pr"><div class="n">'+esc(p.name)+'</div><div class="row"><input class="pp" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Prix (€)" value="'+(p.price>0?p.price:'')+'" aria-label="Prix de '+esc(p.name)+'"><select class="pm" aria-label="Type de prix"><option value="kg">€ au kg / L</option><option value="pk"'+(pk?' selected':'')+'>€ le paquet</option></select><input class="pqi" type="number" min="0" step="any" inputmode="decimal" placeholder="g ou mL du paquet" value="'+(pk?p.pq:'')+'"'+(pk?'':' hidden')+' aria-label="Quantité du paquet"><button class="pri" data-setprice="'+p.id+'">OK</button></div></div>';
+        var pk=pkm({pq:p.pq}),isml=p.u==="ml";
+        h+='<div class="pr"><div class="n">'+esc(p.name)+'</div><div class="row"><input class="pp" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Prix (€)" value="'+(p.price>0?p.price:'')+'" aria-label="Prix de '+esc(p.name)+'"><select class="pm" aria-label="Type de prix"><option value="kg">€ '+(isml?'au L':'au kg')+'</option><option value="pk"'+(pk?' selected':'')+'>€ le paquet</option></select></div><div class="row"><select class="pu" aria-label="Unité du produit"><option value="g"'+(isml?'':' selected')+'>g</option><option value="ml"'+(isml?' selected':'')+'>mL</option></select><input class="pqi" type="number" min="0" step="any" inputmode="decimal" placeholder="Quantité du paquet" value="'+(pk?p.pq:'')+'"'+(pk?'':' hidden')+' aria-label="Quantité du paquet"><button class="pri" data-setprice="'+p.id+'">OK</button></div></div>';
       });
       h+='</details>';
     }
@@ -477,18 +488,19 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     }else{
       h='<h2>Nouveau produit</h2>'+(msg?'<p class="sum">'+esc(msg)+'</p>':'')+
         fld("fn","Nom",draft.name,'type="text"')+
-        '<div class="g3">'+fld("fc","Code-barres",draft.code,'type="text" inputmode="numeric"')+
-        '<label>Unité<select id="fu"><option value="g">g</option><option value="ml">mL</option></select></label>'+fld("fq","Quantité",100)+'</div>'+
+        '<label style="margin-top:8px">Le produit se mesure en<select id="fu"><option value="g">grammes (g)</option><option value="ml">millilitres (mL)</option></select></label>'+
+        '<div class="g2">'+fld("fc","Code-barres",draft.code,'type="text" inputmode="numeric"')+fld("fq","Quantité mangée",100)+'</div>'+
         fld("fw","Poids d\'une pièce en g (facultatif, ex. 50 pour un œuf)",draft.w)+'<p class="sum">Si tu le renseignes, tu choisiras ensuite le nombre de pièces.</p>'+
-        '<p class="sum">Valeurs pour 100 g (ou 100 mL), comme indiquées sur l\'emballage :</p>'+
-        '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+fld("ff","Fibres (g, facultatif)",draft.f)+'<div class="g2">'+fld("pp","Prix (€, facultatif)",draft.price)+'<label>Prix indiqué<select id="pm"><option value="kg">au kg / au L</option><option value="pk"'+(pkm(draft)?' selected':'')+'>du paquet</option></select></label></div>'+
-        '<div id="pqw"'+(pkm(draft)?'':' hidden')+'>'+fld("pq","Quantité du paquet (g ou mL)",pkm(draft)?draft.pq:"")+'</div><p class="sum">Saisis le prix comme en magasin : le coût est ensuite calculé sur la quantité que tu manges (1,99 €/kg et 100 g = 0,20 €).</p>'+
+        '<p class="sum" id="vhint">Valeurs pour 100 g, comme indiquées sur l\'emballage :</p>'+
+        '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+fld("ff","Fibres (g, facultatif)",draft.f)+'<div class="g2">'+fld("pp","Prix (€, facultatif)",draft.price)+'<label>Prix indiqué<select id="pm"><option value="kg">au kg</option><option value="pk"'+(pkm(draft)?' selected':'')+'>du paquet</option></select></label></div>'+
+        '<div id="pqw"'+(pkm(draft)?'':' hidden')+'>'+'<label><span id="pql">Quantité du paquet (g)</span><input id="pq" type="number" min="0" step="any" inputmode="decimal" value="'+(pkm(draft)?draft.pq:'')+'"></label>'+'</div><p class="sum">Saisis le prix comme en magasin : le coût est ensuite calculé sur la quantité que tu manges (1,99 €/kg et 100 g = 0,20 €).</p>'+
         '<p class="err" id="err" role="alert"></p>'+
         '<div class="foot"><button id="back">Retour</button><button class="pri" id="savenew">Enregistrer et ajouter</button></div>';
     }
     $("dbody").innerHTML=h;
     if(view==="qty")updPrev();
     if(view==="rec")updRec();
+    if(view==="new")syncForm();
   }
   function updPrev(){
     var q=num($("qq").value),u=$("qu")?$("qu").value:sel.u,f=q*fc(u,sel.pw);
@@ -593,7 +605,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     else if(t.dataset.pmode){pmode=t.dataset.pmode;renderPrix()}
     else if(t.dataset.setprice){
       var row=t.closest(".pr"),pr2=D.products.filter(function(x){return x.id===t.dataset.setprice})[0],a2=num(row.querySelector(".pp").value),b2=row.querySelector(".pm").value==="kg"?1000:num(row.querySelector(".pqi").value);
-      if(pr2){if(a2>0&&b2>0){pr2.price=a2;pr2.pq=b2}else{delete pr2.price;delete pr2.pq}save();renderPrix()}
+      if(pr2){pr2.u=row.querySelector(".pu").value;if(pr2.u==="ml")delete pr2.pw;if(a2>0&&b2>0){pr2.price=a2;pr2.pq=b2}else{delete pr2.price;delete pr2.pq}save();renderPrix()}
     }
     else if(t.id==="prev"||t.id==="next"){var p=date.split("-");date=iso(new Date(+p[0],+p[1]-1,+p[2]+(t.id==="next"?1:-1)));all()}
     else if(t.id==="today"){date=iso(new Date());all()}
@@ -650,7 +662,8 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     else if(t.id==="sq")$("pl").innerHTML=listHtml(t.value);
     else if(t.id==="qq")updPrev();
     else if(t.id==="pm"){$("pqw").hidden=t.value==="kg"}
-    else if(t.classList.contains("pm")){t.closest(".pr").querySelector(".pqi").hidden=t.value==="kg"}
+    else if(t.id==="fu"){syncForm()}
+    else if(t.classList.contains("pm")||t.classList.contains("pu")){syncRow(t.closest(".pr"))}
     else if(t.id==="qu"){$("qq").value=t.value==="piece"?1:100;updPrev()}
     else if(t.id==="rn")rd.name=t.value;
     else if(t.id==="rp"){rd.portions=num(t.value);updRec()}
