@@ -127,7 +127,8 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
   function save(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}}
   function num(v){var n=parseFloat(v);return isNaN(n)||n<0?0:n}
   function log(create){if(!D.log[date]){if(!create)return {};D.log[date]={matin:[],midi:[],soir:[],collation:[]}}return D.log[date]}
-  function v(e,k){return e[k+"100"]*e.q/(e.u==="portion"?1:100)}
+  function fc(u,pw){return u==="piece"?(pw||0)/100:u==="portion"?1:0.01}
+  function v(e,k){return e[k+"100"]*e.q*fc(e.u,e.pw)}
 
   /* ---------- Affichage ---------- */
   function renderTotals(){
@@ -222,7 +223,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
   var mealName=function(){return MEALS.filter(function(m){return m[0]===dm})[0][1]};
   function stopScan(){if(timer){clearInterval(timer);timer=null}if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}}
   var recMode=false,rd={name:"",portions:1,ing:[]},rcList=[];
-  var ul=function(u){return u==="ml"?"mL":u==="portion"?"portion(s)":"g"};
+  var ul=function(u){return u==="ml"?"mL":u==="portion"?"portion(s)":u==="piece"?"pièce(s)":"g"};
   var dv=function(e){return e.u==="portion"?1:100};
   var per=function(p){return p.u==="portion"?"1 portion":"100 "+ul(p.u)};
   var dfr=function(d){return d.slice(8)+"/"+d.slice(5,7)};
@@ -274,10 +275,13 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
         '<p class="sum" id="msg" role="status">'+esc(msg)+'</p>'+
         '<input id="sq" class="wide" placeholder="Rechercher dans mes produits" aria-label="Rechercher dans mes produits">'+
         '<div class="pl" id="pl">'+listHtml("")+'</div>'+
+        '<button id="offs" class="wide">Chercher sur Open Food Facts</button><div class="pl" id="offl"></div>'+
         '<div class="foot"><button id="newp">Créer un produit</button>'+(recMode?'<button id="backrec">Retour à la recette</button>':'<button data-newrec="1">Créer une recette</button><button id="close">Fermer</button>')+'</div>';
     }else if(view==="qty"){
       h='<h2>'+esc(sel.name)+'</h2><p class="sum">Pour '+per(sel)+' : '+sel.k100+' kcal, P '+sel.p100+' g, G '+sel.c100+' g, L '+sel.l100+' g</p>'+
-        fld("qq","Quantité ("+ul(sel.u)+")",sel.lastq||(sel.u==="portion"?1:100))+'<p class="sum" id="prev2"></p>'+
+        (sel.pw&&(sel.u||"g")==="g"?
+          '<div class="g2">'+fld("qq","Quantité",sel.lastq!=null?sel.lastq:((sel.lastu||"piece")==="piece"?1:100))+'<label>Unité<select id="qu"><option value="piece"'+((sel.lastu||"piece")==="piece"?' selected':'')+'>pièce (≈ '+sel.pw+' g)</option><option value="g"'+(sel.lastu==="g"?' selected':'')+'>g</option></select></label></div>':
+          fld("qq","Quantité ("+ul(sel.u)+")",sel.lastq!=null?sel.lastq:(sel.u==="portion"?1:100)))+'<p class="sum" id="prev2"></p>'+
         '<div class="foot"><button id="back">Retour</button><button class="pri" id="addok">'+(recMode?'Ajouter à la recette':'Ajouter')+'</button></div>';
     }else if(view==="rec"){
       h='<h2>Nouvelle recette</h2>'+fld("rn","Nom de la recette",rd.name,'type="text"')+'<p class="sec">Ingrédients</p>';
@@ -294,6 +298,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
         fld("fn","Nom",draft.name,'type="text"')+
         '<div class="g3">'+fld("fc","Code-barres",draft.code,'type="text" inputmode="numeric"')+
         '<label>Unité<select id="fu"><option value="g">g</option><option value="ml">mL</option></select></label>'+fld("fq","Quantité",100)+'</div>'+
+        fld("fw","Poids d\'une pièce en g (facultatif, ex. 50 pour un œuf)",draft.w)+'<p class="sum">Si tu le renseignes, tu choisiras ensuite le nombre de pièces.</p>'+
         '<p class="sum">Valeurs pour 100 g (ou 100 mL), comme indiquées sur l\'emballage :</p>'+
         '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+
         '<p class="err" id="err" role="alert"></p>'+
@@ -304,8 +309,8 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     if(view==="rec")updRec();
   }
   function updPrev(){
-    var q=num($("qq").value),d=dv(sel);
-    $("prev2").textContent=Math.round(sel.k100*q/d)+" kcal, P "+r1(sel.p100*q/d)+" g, G "+r1(sel.c100*q/d)+" g, L "+r1(sel.l100*q/d)+" g";
+    var q=num($("qq").value),u=$("qu")?$("qu").value:sel.u,f=q*fc(u,sel.pw);
+    $("prev2").textContent=Math.round(sel.k100*f)+" kcal, P "+r1(sel.p100*f)+" g, G "+r1(sel.c100*f)+" g, L "+r1(sel.l100*f)+" g";
   }
   function renderRecs(){
     var r=D.products.filter(function(p){return p.rec});
@@ -337,6 +342,36 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     }catch(e){msg="Open Food Facts est injoignable. Renseigne les valeurs à la main."}
     view="new";renderDlg();
   }
+  var offRes=[];
+  function offMap(h){
+    var n=h.nutriments||{},b=h.brands,k=n["energy-kcal_100g"];
+    if(k==null)k=n["energy-kcal"];
+    if(k==null&&n["energy_100g"]!=null)k=n["energy_100g"]/4.184;
+    if(k==null)return null;
+    if(Array.isArray(b))b=b[0];
+    b=String(b||"").split(",")[0].trim();
+    var g=function(a,c){var x=n[a];return r1(x!=null?x:(n[c]||0))};
+    return {code:h.code||"",name:(h.product_name||"Sans nom")+(b?" ("+b+")":""),k:r1(k),p:g("proteins_100g","proteins"),c:g("carbohydrates_100g","carbohydrates"),l:g("fat_100g","fat")};
+  }
+  async function offSearch(){
+    var q=($("sq").value||"").trim(),box=$("offl");
+    if(q.length<2){box.innerHTML='<div class="empty">Tape au moins 2 lettres dans la recherche.</div>';return}
+    box.innerHTML='<div class="empty">Recherche en cours…</div>';
+    var hits=[],fields="code,product_name,brands,nutriments";
+    try{
+      var r=await fetch("https://search.openfoodfacts.org/search?q="+encodeURIComponent(q)+"&page_size=15&fields="+fields+"&langs=fr");
+      var j=await r.json();hits=j.hits||[];
+    }catch(e){}
+    if(!hits.length){
+      try{
+        var r2=await fetch("https://world.openfoodfacts.org/cgi/search.pl?search_terms="+encodeURIComponent(q)+"&search_simple=1&action=process&json=1&page_size=15&fields="+fields);
+        var j2=await r2.json();hits=j2.products||[];
+      }catch(e){box=$("offl");if(box)box.innerHTML='<div class="empty">Open Food Facts est injoignable. Réessaie plus tard ou crée le produit à la main.</div>';return}
+    }
+    offRes=hits.map(offMap).filter(Boolean);
+    box=$("offl");if(!box)return;
+    box.innerHTML=offRes.length?offRes.map(function(o,i){return '<button data-off="'+i+'"><span>'+esc(o.name)+'</span><small>'+o.k+' kcal / 100 g</small></button>'}).join(""):'<div class="empty">Aucun résultat avec valeurs nutritionnelles. Essaie un autre mot ou crée le produit.</div>';
+  }
   async function scan(){
     var vid=$("vid"),m=$("msg");
     if(!("BarcodeDetector" in window)||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){m.textContent="Le scan n'est pas pris en charge par ce navigateur. Saisis le code-barres à la main.";return}
@@ -350,10 +385,10 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
       try{var r=await det.detect(vid);if(r.length){var c=r[0].rawValue;stopScan();lookup(c)}}catch(e){}
     },300);
   }
-  function addEntry(p,q){
-    if(recMode){rd.ing.push({name:p.name,q:q,u:p.u||"g",k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100});view="rec";renderDlg();return}
+  function addEntry(p,q,u2){
+    if(recMode){rd.ing.push({name:p.name,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100});view="rec";renderDlg();return}
     var L=log(true);
-    L[dm].push({id:uid(),name:p.name,q:q,u:p.u||"g",k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100});
+    L[dm].push({id:uid(),name:p.name,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100});
     save();stopScan();$("dlg").close();all();
   }
 
@@ -377,11 +412,13 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     else if(t.id==="close"){stopScan();$("dlg").close()}
     else if(t.id==="scan"){scan()}
     else if(t.id==="bcgo"){lookup($("bc").value)}
+    else if(t.id==="offs"){offSearch()}
+    else if(t.dataset.off){var o=offRes[+t.dataset.off];draft={code:o.code,name:o.name,k:o.k,p:o.p,c:o.c,l:o.l};view="new";msg="Trouvé sur Open Food Facts : vérifie les valeurs avant d\'enregistrer.";renderDlg()}
     else if(t.dataset.pick){sel=D.products.filter(function(p){return p.id===t.dataset.pick})[0];view="qty";renderDlg()}
     else if(t.id==="newp"){view="new";draft={};msg="";renderDlg()}
     else if(t.id==="back"){view="pick";msg="";renderDlg()}
     else if(t.dataset.copy){var lm2=lastMeal();if(lm2){var Lc=log(true);lm2.items.forEach(function(e){Lc[dm].push(Object.assign({},e,{id:uid()}))});save();stopScan();$("dlg").close();all()}}
-    else if(t.dataset.recent){var e2=rcList[+t.dataset.recent];sel={name:e2.name,u:e2.u,k100:e2.k100,p100:e2.p100,c100:e2.c100,l100:e2.l100,lastq:e2.q};view="qty";renderDlg()}
+    else if(t.dataset.recent){var e2=rcList[+t.dataset.recent];sel={name:e2.name,u:e2.u==="piece"?"g":e2.u,pw:e2.pw,lastu:e2.u==="piece"?"piece":"g",k100:e2.k100,p100:e2.p100,c100:e2.c100,l100:e2.l100,lastq:e2.q};view="qty";renderDlg()}
     else if(t.dataset.newrec){recMode=true;rd={name:"",portions:1,ing:[]};if(!$("dlg").open){dm="";$("dlg").showModal()}view="rec";renderDlg()}
     else if(t.id==="recadd"){view="pick";msg="";renderDlg()}
     else if(t.id==="backrec"){view="rec";renderDlg()}
@@ -395,13 +432,15 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
       if(dm){sel=rp;view="qty";renderDlg()}else{$("dlg").close()}
     }
     else if(t.dataset.prdel){D.products=D.products.filter(function(x){return x.id!==t.dataset.prdel});save();renderRecs()}
-    else if(t.id==="addok"){var q=num($("qq").value);if(q>0)addEntry(sel,q)}
+    else if(t.id==="addok"){var q=num($("qq").value);if(q>0)addEntry(sel,q,$("qu")?$("qu").value:null)}
     else if(t.id==="savenew"){
       var name=$("fn").value.trim(),k=$("fk").value;
       if(!name||k===""){$("err").textContent="Indique au moins le nom et les calories pour 100 g.";return}
       var q2=num($("fq").value)||100,code=$("fc").value.trim();
       var p={id:uid(),code:code,name:name,u:$("fu").value,k100:num(k),p100:num($("fp").value),c100:num($("fg").value),l100:num($("fl").value)};
-      D.products.push(p);addEntry(p,q2);
+      var pwv=num($("fw").value);if(pwv>0&&p.u==="g")p.pw=pwv;
+      D.products.push(p);
+      if(p.pw){sel=Object.assign({},p,{lastu:"piece",lastq:1});view="qty";renderDlg()}else addEntry(p,q2);
     }
   });
   document.addEventListener("input",function(e){
@@ -409,6 +448,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
     if(t.id==="bk")impArm=false;
     else if(t.id==="sq")$("pl").innerHTML=listHtml(t.value);
     else if(t.id==="qq")updPrev();
+    else if(t.id==="qu"){$("qq").value=t.value==="piece"?1:100;updPrev()}
     else if(t.id==="rn")rd.name=t.value;
     else if(t.id==="rp"){rd.portions=num(t.value);updRec()}
   });
@@ -419,7 +459,7 @@ select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var
       if(x){x.q=num(t.value);save();all()}
     }
   });
-  document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.id==="bc"){e.preventDefault();lookup(e.target.value)}});
+  document.addEventListener("keydown",function(e){if(e.key!=="Enter")return;if(e.target.id==="bc"){e.preventDefault();lookup(e.target.value)}else if(e.target.id==="sq"){e.preventDefault();offSearch()}});
   $("dlg").addEventListener("close",function(){stopScan();recMode=false});
   all();
 })();
