@@ -80,29 +80,52 @@ dialog::backdrop{background:rgba(10,15,12,.5)}
 video{width:100%;border-radius:12px;margin-top:8px;background:#000}
 .err{color:var(--bad);min-height:1.2em}
 .tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:4px;background:var(--card);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
-.tabbar button{flex:1;max-width:140px;background:transparent;color:var(--mut);font-size:.8rem;font-weight:600;padding:8px 4px;min-height:48px}
+.tabbar button{flex:1;max-width:140px;background:transparent;color:var(--mut);font-size:.76rem;font-weight:600;padding:8px 4px;min-height:48px}
 .tabbar button[aria-current="page"]{color:var(--acc);background:var(--soft)}
+.seg{display:flex;background:var(--soft);border-radius:12px;padding:3px;gap:2px;margin-bottom:12px}
+.seg button{flex:1;background:transparent;min-height:38px;padding:6px 4px;font-size:.82rem;font-weight:600;color:var(--mut)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.wst{display:flex;gap:10px;margin-top:12px}
+.wst>div{flex:1;background:var(--soft);border-radius:12px;padding:10px 12px}
+.wst span{display:block;font-size:.75rem;color:var(--mut)}
+.wst b{font-size:1.25rem}
+.wst small{margin-top:2px}
+.wkw{position:relative}
+.wk{display:flex;gap:6px;height:96px}
+.wk button{flex:1;padding:0;background:transparent;min-height:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;font-size:.72rem;color:var(--mut)}
+.wk i{display:block;width:100%;max-width:30px;background:var(--soft);border-radius:6px 6px 2px 2px;min-height:2px}
+.wk .on{color:var(--ink);font-weight:700}
+.wk .on i{background:var(--acc)}
+.gl{position:absolute;left:0;right:0;border-top:1px dashed var(--mut);opacity:.6;pointer-events:none}
+.pr{padding:10px 0;border-top:1px solid var(--line)}
+.pr .n{font-weight:500}
+.pr .row{margin:6px 0 0}
 @media (max-width:600px){dialog{margin:auto 0 0;width:100%;max-width:none;border-radius:20px 20px 0 0}.sc{gap:12px}.ringw{width:112px;height:112px}}
 </style>
 </head>
 <body>
 <main>
   <h1 class="sr">Suivi nutrition</h1>
-  <div class="date" data-tab="journal poids">
+  <div class="date" data-tab="journal poids prix">
     <button id="prev" aria-label="Jour précédent">‹</button>
     <b id="dlabel"></b>
     <button id="today" class="gh" hidden>Aujourd'hui</button>
     <button id="next" aria-label="Jour suivant">›</button>
   </div>
 
-  <div data-tab="journal"><div class="card" id="totals" aria-live="polite"></div><div id="meals"></div></div>
+  <div data-tab="journal"><div class="card" id="totals" aria-live="polite"></div><div id="meals"></div><div class="card" id="week"></div></div>
 
-  <div data-tab="poids"><div class="card">
-    <h2>Poids</h2>
-    <p class="sum">La pesée est enregistrée pour le jour affiché ci-dessus.</p>
-    <div class="row"><input id="wv" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Poids (kg)" aria-label="Poids du jour en kg"><button class="pri" id="wadd">Enregistrer</button></div>
-    <div id="wlist"></div>
-  </div></div>
+  <div data-tab="poids">
+    <div class="card">
+      <h2>Poids</h2>
+      <div class="row"><input id="wv" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Poids (kg)" aria-label="Poids du jour en kg"><button class="pri" id="wadd">Enregistrer</button></div>
+      <p class="sum">La pesée est enregistrée pour le jour affiché ci-dessus.</p>
+      <div id="wstat"></div>
+    </div>
+    <div class="card"><div id="wbody"></div></div>
+  </div>
+
+  <div data-tab="prix"><div class="card" id="pxc"></div></div>
 
   <div data-tab="recettes"><div class="card">
     <h2>Mes recettes</h2>
@@ -132,7 +155,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
 </main>
 
 <nav class="tabbar" aria-label="Navigation principale">
-  <button data-go="journal">Journal</button><button data-go="poids">Poids</button><button data-go="recettes">Recettes</button><button data-go="reglages">Réglages</button>
+  <button data-go="journal">Journal</button><button data-go="poids">Poids</button><button data-go="prix">Prix</button><button data-go="recettes">Recettes</button><button data-go="reglages">Réglages</button>
 </nav>
 
 <dialog id="dlg" aria-label="Ajouter un aliment"><div id="dbody"></div></dialog>
@@ -146,7 +169,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
   D.weights=D.weights||{};if(D.goals.pk==null)D.goals.pk=1.9;if(D.goals.lk==null)D.goals.lk=0.9;
   var pad=function(n){return n<10?"0"+n:""+n};
   var iso=function(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
-  var date=iso(new Date()),tab="journal";
+  var date=iso(new Date()),tab="journal",wmode="hist",pmode="day",MISS={};
   var uid=function(){return Math.random().toString(36).slice(2,9)};
   var r1=function(x){return Math.round(x*10)/10};
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -205,7 +228,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     }
     $("gh").textContent=h;
   }
-  function all(){renderDate();renderW();renderTotals();renderMeals();renderRecs();hint();showTab()}
+  function all(){renderDate();renderW();renderTotals();renderMeals();renderWeek();renderPrix();renderRecs();hint();showTab()}
 
   /* ---------- Objectifs ---------- */
   [["k","gk"],["pk","gp"],["lk","gl"]].forEach(function(a){
@@ -234,23 +257,145 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     save();$("gk").value=D.goals.k;$("gp").value=D.goals.pk;$("gl").value=D.goals.lk;all();
     m.textContent="Sauvegarde importée.";
   }
+  var nf=function(x){return String(r1(x)).replace(".",",")};
+  var sg=function(x){return (x>0?"+":x<0?"−":"")+nf(Math.abs(x))};
+  function plus(d,n){var p=d.split("-");return iso(new Date(+p[0],+p[1]-1,+p[2]+n))}
+  function fdt(d,o){var p=d.split("-");return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString("fr-FR",o)}
+  function monday(d){var p=d.split("-"),x=new Date(+p[0],+p[1]-1,+p[2]);x.setDate(x.getDate()-((x.getDay()+6)%7));return iso(x)}
+  function groups(kf,lf){
+    var m={},out=[];
+    Object.keys(D.weights).sort().forEach(function(d){var k=kf(d);if(!m[k]){m[k]={key:k,label:lf(k),sum:0,n:0};out.push(m[k])}m[k].sum+=D.weights[d];m[k].n++});
+    out.forEach(function(g){g.avg=Math.round(g.sum/g.n*10)/10});
+    return out;
+  }
+  function chart(pts){
+    if(pts.length<2)return '<p class="empty">La courbe apparaît à partir de deux points.</p>';
+    var W=320,H=160,L=38,R=10,T=10,B=22,ys=pts.map(function(p){return p.y}),mn=Math.min.apply(null,ys),mx=Math.max.apply(null,ys);
+    var pad=Math.max(.3,(mx-mn)*.15);mn-=pad;mx+=pad;
+    var X=function(i){return L+i/(pts.length-1)*(W-L-R)},Y=function(v){return T+(1-(v-mn)/(mx-mn))*(H-T-B)};
+    var g='';
+    for(var i=0;i<3;i++){var v=mn+(mx-mn)*i/2,y=Y(v);g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(y+3).toFixed(1)+'" text-anchor="end" fill="var(--mut)" font-size="10">'+nf(v)+'</text>'}
+    var line=pts.map(function(p,i){return X(i).toFixed(1)+","+Y(p.y).toFixed(1)}).join(" ");
+    var dots=pts.length<=45?pts.map(function(p,i){return '<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(p.y).toFixed(1)+'" r="3" fill="var(--acc)"/>'}).join(""):"";
+    return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Courbe du poids" style="width:100%;height:auto">'+g+'<polyline points="'+line+'" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+dots+
+      '<text x="'+L+'" y="'+(H-6)+'" fill="var(--mut)" font-size="10">'+esc(pts[0].l)+'</text><text x="'+(W-R)+'" y="'+(H-6)+'" text-anchor="end" fill="var(--mut)" font-size="10">'+esc(pts[pts.length-1].l)+'</text></svg>';
+  }
   function renderW(){
-    var ds=Object.keys(D.weights).sort(),h="";
+    var ds=Object.keys(D.weights).sort(),st="",body="";
     $("wv").value=D.weights[date]!=null?D.weights[date]:"";
-    if(!ds.length)h='<div class="empty">Aucun poids enregistré. Saisis ton poids du jour pour calculer tes macros.</div>';
-    else{
-      var vals=ds.slice(-30).map(function(d){return D.weights[d]});
-      if(vals.length>1){
-        var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals),rg=(mx-mn)||1;
-        var pts=vals.map(function(x,i){return (i/(vals.length-1)*296+2).toFixed(1)+","+(56-(x-mn)/rg*52).toFixed(1)}).join(" ");
-        h+='<svg viewBox="0 0 300 60" role="img" aria-label="Évolution du poids" style="width:100%;height:60px;margin-top:8px"><polyline points="'+pts+'" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round"/></svg>'+
-          '<p class="sum">Minimum '+mn+' kg, maximum '+mx+' kg sur les '+vals.length+' dernières pesées.</p>';
+    if(!ds.length){
+      body='<div class="empty">Aucune pesée enregistrée. Saisis ton poids du jour pour voir ta courbe et calculer tes macros.</div>';
+    }else{
+      var last=ds[ds.length-1],lw=D.weights[last],cut=plus(last,-30),base=ds.filter(function(d){return d>=cut})[0];
+      st='<div class="wst"><div><span>Dernière pesée</span><b>'+nf(lw)+' kg</b><small>'+fdt(last,{day:"numeric",month:"short"})+'</small></div>';
+      if(base&&base!==last)st+='<div><span>Évolution</span><b>'+sg(lw-D.weights[base])+' kg</b><small>depuis le '+fdt(base,{day:"numeric",month:"short"})+'</small></div>';
+      st+='</div>';
+      body='<div class="seg" role="group" aria-label="Affichage">'+[["hist","Historique"],["week","Moy. hebdo"],["month","Moy. mensuelle"]].map(function(m){return '<button data-wmode="'+m[0]+'" aria-pressed="'+(wmode===m[0])+'">'+m[1]+'</button>'}).join("")+'</div>';
+      var pts,rows="";
+      if(wmode==="hist"){
+        pts=ds.slice(-90).map(function(d){return {y:D.weights[d],l:fdt(d,{day:"numeric",month:"short"})}});
+        ds.slice().reverse().forEach(function(d,i,arr){
+          var prev=arr[i+1],dl=prev?D.weights[d]-D.weights[prev]:null;
+          rows+='<div class="it"><span class="n">'+fdt(d,{weekday:"short",day:"numeric",month:"short",year:"numeric"})+'</span><span class="k">'+nf(D.weights[d])+' kg</span><span class="m">'+(dl==null?"Première pesée":(Math.abs(dl)<0.05?"stable":sg(dl)+" kg"))+'</span><span class="qd"><button class="del" data-wdel="'+d+'" aria-label="Supprimer la pesée du '+fdt(d,{day:"numeric",month:"long"})+'">Retirer</button></span></div>';
+        });
+      }else{
+        var wk=wmode==="week",gs=wk?groups(monday,function(k){return "Semaine du "+fdt(k,{day:"numeric",month:"short"})+" au "+fdt(plus(k,6),{day:"numeric",month:"short"})}):groups(function(d){return d.slice(0,7)},function(k){var t=fdt(k+"-01",{month:"long",year:"numeric"});return t.charAt(0).toUpperCase()+t.slice(1)});
+        pts=gs.slice(-26).map(function(g){return {y:g.avg,l:wk?fdt(g.key,{day:"numeric",month:"short"}):fdt(g.key+"-01",{month:"short",year:"2-digit"})}});
+        gs.slice().reverse().forEach(function(g,i,arr){
+          var prev=arr[i+1];
+          rows+='<div class="it"><span class="n">'+g.label+'</span><span class="k">'+nf(g.avg)+' kg</span><span class="m">'+g.n+' pesée'+(g.n>1?'s':'')+(prev?' · '+(Math.abs(g.avg-prev.avg)<0.05?'stable':sg(g.avg-prev.avg)+' kg vs précédent'):'')+'</span></div>';
+        });
       }
-      ds.slice(-7).reverse().forEach(function(d){
-        h+='<div class="it" style="grid-template-columns:1fr auto auto"><span>'+d.slice(8)+'/'+d.slice(5,7)+'/'+d.slice(0,4)+'</span><b>'+D.weights[d]+' kg</b><button class="del" data-wdel="'+d+'" aria-label="Supprimer la pesée du '+d.slice(8)+'/'+d.slice(5,7)+'">Retirer</button></div>';
-      });
+      body+=chart(pts)+'<div style="margin-top:6px">'+rows+'</div>';
     }
-    $("wlist").innerHTML=h;
+    $("wstat").innerHTML=st;$("wbody").innerHTML=body;
+  }
+  function renderWeek(){
+    var T=targets(),days=[],mx=T.k||0,tot=0,nd=0;
+    for(var i=6;i>=0;i--){
+      var d=plus(date,-i),Lg=D.log[d]||{},k=0;
+      MEALS.forEach(function(m){(Lg[m[0]]||[]).forEach(function(e){k+=v(e,"k")})});
+      days.push({d:d,k:k});mx=Math.max(mx,k);if(k>0){tot+=k;nd++}
+    }
+    var box=$("week");box.hidden=!nd;if(!nd)return;
+    box.innerHTML='<div class="mh"><h2>7 derniers jours</h2><span>moyenne '+Math.round(tot/nd)+' kcal</span></div><div class="wkw"><div class="wk">'+
+      days.map(function(x){return '<button data-day="'+x.d+'" class="'+(x.d===date?'on':'')+'" aria-label="'+fdt(x.d,{weekday:"long",day:"numeric",month:"long"})+' : '+Math.round(x.k)+' kcal"><i style="height:'+Math.round(x.k/mx*70)+'px"></i>'+fdt(x.d,{weekday:"narrow"})+'</button>'}).join("")+'</div>'+
+      (T.k?'<div class="gl" style="bottom:'+Math.round(22+T.k/mx*70)+'px"></div>':'')+'</div>'+(T.k?'<p class="sum">Trait pointillé : ton objectif de '+T.k+' kcal.</p>':'');
+  }
+
+  var fe=function(x){return x.toLocaleString("fr-FR",{style:"currency",currency:"EUR"})};
+  function prodOf(e){
+    for(var i=0;i<D.products.length;i++){var p=D.products[i];if(e.pid?p.id===e.pid:p.name===e.name)return p}
+    return null;
+  }
+  function cost(e){
+    var pr=prodOf(e);
+    if(pr&&pr.rec){
+      var c=0,ok=true;
+      pr.ing.forEach(function(i){var x=cost(i);c+=x.c;if(!x.ok)ok=false});
+      return {c:c/(pr.portions||1)*e.q,ok:ok};
+    }
+    if(!pr||!(pr.price>0)||!(pr.pq>0)){if(pr)MISS[pr.id]=pr;return {c:0,ok:false}}
+    var qb=e.u==="piece"?e.q*(e.pw||pr.pw||0):e.q;
+    return {c:pr.price*qb/pr.pq,ok:true};
+  }
+  function prange(){
+    if(pmode==="day")return [date,date];
+    if(pmode==="week"){var m=monday(date);return [m,plus(m,6)]}
+    var p=date.split("-");
+    return [p[0]+"-"+p[1]+"-01",iso(new Date(+p[0],+p[1],0))];
+  }
+  function renderPrix(){
+    MISS={};
+    var r=prange(),tot=0,allok=true,nd=0,subs={},order=[],prods={},byMeal={};
+    for(var d=r[0];d<=r[1];d=plus(d,1)){
+      var Lg=D.log[d]||{},dc=0,has=false,sk=pmode==="month"?monday(d):d;
+      MEALS.forEach(function(m){(Lg[m[0]]||[]).forEach(function(e){
+        has=true;var x=cost(e);dc+=x.c;if(!x.ok)allok=false;
+        var key=e.pid||e.name,pp=prods[key]||(prods[key]={name:e.name,pid:e.pid,c:0,qb:0,u:e.u==="portion"?"portion(s)":e.u==="ml"?"mL":"g",ok:true});
+        pp.c+=x.c;pp.qb+=(e.u==="piece"?e.q*(e.pw||0):e.q);if(!x.ok)pp.ok=false;
+        (byMeal[m[0]]=byMeal[m[0]]||[]).push({n:e.name,x:x,q:e.q,u:e.u});
+      })});
+      if(has)nd++;
+      if(!subs[sk]){subs[sk]={k:sk,c:0};order.push(sk)}
+      subs[sk].c+=dc;tot+=dc;
+    }
+    var label=pmode==="day"?fdt(date,{weekday:"long",day:"numeric",month:"long"}):pmode==="week"?"Semaine du "+fdt(r[0],{day:"numeric",month:"short"})+" au "+fdt(r[1],{day:"numeric",month:"short"}):fdt(date,{month:"long",year:"numeric"});
+    var h='<div class="seg" role="group" aria-label="Période">'+[["day","Jour"],["week","Semaine"],["month","Mois"]].map(function(m){return '<button data-pmode="'+m[0]+'" aria-pressed="'+(pmode===m[0])+'">'+m[1]+'</button>'}).join("")+'</div>';
+    if(!nd){$("pxc").innerHTML=h+'<p class="sum" style="text-transform:capitalize">'+label+'</p><div class="empty">Aucun repas enregistré sur cette période.</div>';return}
+    h+='<p class="sum" style="text-transform:capitalize">'+label+'</p><div class="wst"><div><span>Total estimé</span><b>'+fe(tot)+'</b></div><div><span>Moyenne par jour</span><b>'+fe(tot/nd)+'</b></div></div>';
+    if(!allok)h+='<p class="hint">Estimation incomplète : certains produits n\'ont pas encore de prix (voir « Prix des produits » plus bas).</p>';
+    if(pmode==="day"){
+      MEALS.forEach(function(m){
+        var items=byMeal[m[0]];if(!items)return;
+        var sum=0;items.forEach(function(i){sum+=i.x.c});
+        h+='<div class="mh" style="margin-top:16px"><h2>'+m[1]+'</h2><span>'+fe(sum)+'</span></div>';
+        items.forEach(function(i){h+='<div class="it"><span class="n">'+esc(i.n)+'</span><span class="k">'+(i.x.ok?fe(i.x.c):'prix ?')+'</span><span class="m">'+i.q+' '+ul(i.u)+'</span></div>'});
+      });
+    }else{
+      h+='<div class="mh" style="margin-top:16px"><h2>'+(pmode==="week"?"Par jour":"Par semaine")+'</h2></div>';
+      order.forEach(function(k){
+        var lb=pmode==="week"?fdt(k,{weekday:"long",day:"numeric",month:"short"}):"Semaine du "+fdt(k,{day:"numeric",month:"short"});
+        h+='<div class="it"><span class="n" style="text-transform:capitalize">'+lb+'</span><span class="k">'+fe(subs[k].c)+'</span></div>';
+      });
+      var pl=Object.keys(prods).map(function(k){return prods[k]}).sort(function(a,b){return b.c-a.c});
+      h+='<div class="mh" style="margin-top:16px"><h2>Par produit</h2></div><p class="sum">Quantités consommées sur la période : une base pour tes courses.</p>';
+      pl.forEach(function(p){h+='<div class="it"><span class="n">'+esc(p.name)+'</span><span class="k">'+(p.ok?fe(p.c):'prix ?')+'</span><span class="m">'+Math.round(p.qb*10)/10+' '+p.u+'</span></div>'});
+    }
+    var list={},miss=0;
+    Object.keys(prods).forEach(function(k){var pr=prodOf({pid:prods[k].pid,name:prods[k].name});if(pr&&!pr.rec)list[pr.id]=pr});
+    Object.keys(MISS).forEach(function(id){if(!MISS[id].rec)list[id]=MISS[id]});
+    var arr=Object.keys(list).map(function(k){return list[k]});
+    arr.forEach(function(p){if(!(p.price>0))miss++});
+    arr.sort(function(a,b){return (a.price>0)-(b.price>0)});
+    if(arr.length){
+      h+='<details class="dtl" style="margin-top:12px"'+(miss?' open':'')+'><summary>Prix des produits'+(miss?' ('+miss+' à compléter)':'')+'</summary><p class="sum">Indique le prix payé et la quantité achetée, en g ou mL (6 œufs de 50 g : 300).</p>';
+      arr.forEach(function(p){
+        h+='<div class="pr"><div class="n">'+esc(p.name)+'</div><div class="row"><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="Prix (€)" value="'+(p.price>0?p.price:'')+'" aria-label="Prix payé pour '+esc(p.name)+'"><input type="number" min="0" step="any" inputmode="decimal" placeholder="pour (g/mL)" value="'+(p.pq>0?p.pq:'')+'" aria-label="Quantité achetée de '+esc(p.name)+'"><button class="pri" data-setprice="'+p.id+'">OK</button></div></div>';
+      });
+      h+='</details>';
+    }
+    $("pxc").innerHTML=h;
   }
 
   /* ---------- Dialogue d'ajout ---------- */
@@ -333,7 +478,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
         '<label>Unité<select id="fu"><option value="g">g</option><option value="ml">mL</option></select></label>'+fld("fq","Quantité",100)+'</div>'+
         fld("fw","Poids d\'une pièce en g (facultatif, ex. 50 pour un œuf)",draft.w)+'<p class="sum">Si tu le renseignes, tu choisiras ensuite le nombre de pièces.</p>'+
         '<p class="sum">Valeurs pour 100 g (ou 100 mL), comme indiquées sur l\'emballage :</p>'+
-        '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+fld("ff","Fibres (g, facultatif)",draft.f)+
+        '<div class="g2">'+fld("fk","Calories (kcal)",draft.k)+fld("fp","Protéines (g)",draft.p)+fld("fg","Glucides (g)",draft.c)+fld("fl","Lipides (g)",draft.l)+'</div>'+fld("ff","Fibres (g, facultatif)",draft.f)+'<div class="g2">'+fld("pp","Prix payé (€, facultatif)",draft.price)+fld("pq","pour (g ou mL)",draft.pq)+'</div><p class="sum">Ex. : 6 œufs de 50 g à 2,10 € → quantité 300. Le prix sert à estimer le coût de tes repas.</p>'+
         '<p class="err" id="err" role="alert"></p>'+
         '<div class="foot"><button id="back">Retour</button><button class="pri" id="savenew">Enregistrer et ajouter</button></div>';
     }
@@ -360,11 +505,11 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     draft={code:code};
     msg="Code "+code+" introuvable. Renseigne les valeurs de l\'emballage : le produit sera retenu pour la prochaine fois.";
     try{
-      var r=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+"?fields=product_name,brands,nutriments");
+      var r=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+"?fields=product_name,brands,nutriments,product_quantity");
       var j=await r.json();
       if(j.status===1&&j.product){
         var pr=j.product,n=pr.nutriments||{},br=(pr.brands||"").split(",")[0].trim();
-        draft.name=(pr.product_name||"")+(br?" ("+br+")":"");
+        draft.name=(pr.product_name||"")+(br?" ("+br+")":"");draft.pq=num(pr.product_quantity)||"";
         var kc=n["energy-kcal_100g"];
         if(kc==null&&n["energy_100g"]!=null)kc=n["energy_100g"]/4.184;
         if(kc!=null){
@@ -373,6 +518,16 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
         }else msg="Produit trouvé sur Open Food Facts, mais sans valeurs nutritionnelles : complète-les.";
       }
     }catch(e){msg="Open Food Facts est injoignable. Renseigne les valeurs à la main."}
+    try{
+      var rp=await fetch("https://prices.openfoodfacts.org/api/v1/prices?product_code="+encodeURIComponent(code)+"&order_by=-date&size=10");
+      var jp=await rp.json(),its=jp.items||jp.results||[];
+      var it=its.filter(function(x){return x.currency==="EUR"&&x.price>0})[0];
+      if(it){
+        draft.price=Math.round(it.price*100)/100;
+        if(it.price_per==="KILOGRAM")draft.pq=1000;
+        msg+=" Prix indicatif trouvé sur Open Prices"+(it.date?" ("+it.date+")":"")+" : vérifie-le"+(draft.pq?"":" et indique la quantité")+".";
+      }
+    }catch(e){}
     view="new";renderDlg();
   }
   var offRes=[];
@@ -419,9 +574,9 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     },300);
   }
   function addEntry(p,q,u2){
-    if(recMode){rd.ing.push({name:p.name,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100,f100:p.f100});view="rec";renderDlg();return}
+    if(recMode){rd.ing.push({name:p.name,pid:p.id||p.pid,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100,f100:p.f100});view="rec";renderDlg();return}
     var L=log(true);
-    L[dm].push({id:uid(),name:p.name,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100,f100:p.f100});
+    L[dm].push({id:uid(),name:p.name,pid:p.id||p.pid,q:q,u:u2||p.u||"g",pw:p.pw,k100:p.k100,p100:p.p100,c100:p.c100,l100:p.l100,f100:p.f100});
     save();stopScan();$("dlg").close();all();
   }
 
@@ -429,6 +584,13 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
   document.addEventListener("click",function(e){
     var t=e.target.closest("button");if(!t)return;
     if(t.dataset.go){tab=t.dataset.go;showTab();window.scrollTo(0,0)}
+    else if(t.dataset.wmode){wmode=t.dataset.wmode;renderW()}
+    else if(t.dataset.day){date=t.dataset.day;all()}
+    else if(t.dataset.pmode){pmode=t.dataset.pmode;renderPrix()}
+    else if(t.dataset.setprice){
+      var row=t.closest(".pr"),ins=row.querySelectorAll("input"),pr2=D.products.filter(function(x){return x.id===t.dataset.setprice})[0],a2=num(ins[0].value),b2=num(ins[1].value);
+      if(pr2){if(a2>0&&b2>0){pr2.price=a2;pr2.pq=b2}else{delete pr2.price;delete pr2.pq}save();renderPrix()}
+    }
     else if(t.id==="prev"||t.id==="next"){var p=date.split("-");date=iso(new Date(+p[0],+p[1]-1,+p[2]+(t.id==="next"?1:-1)));all()}
     else if(t.id==="today"){date=iso(new Date());all()}
     else if(t.id==="exp"){var bk=$("bk");bk.value=JSON.stringify({app:"suivi-nutrition",v:1,data:D});bk.select();$("bkmsg").textContent="Données exportées. Copie ce texte et garde-le (notes, message à toi-même), ou colle-le dans l\'autre version de l\'appli."}
@@ -452,7 +614,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
     else if(t.id==="newp"){view="new";draft={};msg="";renderDlg()}
     else if(t.id==="back"){view="pick";msg="";renderDlg()}
     else if(t.dataset.copy){var lm2=lastMeal();if(lm2){var Lc=log(true);lm2.items.forEach(function(e){Lc[dm].push(Object.assign({},e,{id:uid()}))});save();stopScan();$("dlg").close();all()}}
-    else if(t.dataset.recent){var e2=rcList[+t.dataset.recent];sel={name:e2.name,u:e2.u==="piece"?"g":e2.u,pw:e2.pw,lastu:e2.u==="piece"?"piece":"g",k100:e2.k100,p100:e2.p100,c100:e2.c100,l100:e2.l100,f100:e2.f100,lastq:e2.q};view="qty";renderDlg()}
+    else if(t.dataset.recent){var e2=rcList[+t.dataset.recent];sel={name:e2.name,pid:e2.pid,u:e2.u==="piece"?"g":e2.u,pw:e2.pw,lastu:e2.u==="piece"?"piece":"g",k100:e2.k100,p100:e2.p100,c100:e2.c100,l100:e2.l100,f100:e2.f100,lastq:e2.q};view="qty";renderDlg()}
     else if(t.dataset.newrec){recMode=true;rd={name:"",portions:1,ing:[]};if(!$("dlg").open){dm="";$("dlg").showModal()}view="rec";renderDlg()}
     else if(t.id==="recadd"){view="pick";msg="";renderDlg()}
     else if(t.id==="backrec"){view="rec";renderDlg()}
@@ -473,6 +635,7 @@ video{width:100%;border-radius:12px;margin-top:8px;background:#000}
       var q2=num($("fq").value)||100,code=$("fc").value.trim();
       var p={id:uid(),code:code,name:name,u:$("fu").value,k100:num(k),p100:num($("fp").value),c100:num($("fg").value),l100:num($("fl").value),f100:num($("ff").value)};
       var pwv=num($("fw").value);if(pwv>0&&p.u==="g")p.pw=pwv;
+      var ppv=num($("pp").value),pqv=num($("pq").value);if(ppv>0&&pqv>0){p.price=ppv;p.pq=pqv}
       D.products.push(p);
       if(p.pw){sel=Object.assign({},p,{lastu:"piece",lastq:1});view="qty";renderDlg()}else addEntry(p,q2);
     }
