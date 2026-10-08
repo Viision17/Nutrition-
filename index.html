@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Suivi nutrition</title>
+<title>Forme</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f7d5b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Forme">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
 :root{--bg:#f5f6f3;--card:#fff;--ink:#1d2621;--mut:#6c7872;--line:#e7eae6;--soft:#eef1ed;--acc:#2f7d5b;--acc-ink:#fff;--p:#5b7bd5;--c:#d9a441;--l:#a07ad8;--bad:#c9534b;
@@ -228,6 +234,10 @@ dialog{border-radius:24px;box-shadow:0 24px 60px -20px rgba(0,0,0,.5)}
 .tabbar button[data-gt="stats"]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 20V10M12 20V4M19 20v-7'/%3E%3C/svg%3E")}
 input[type=search]{-webkit-appearance:none;appearance:none;width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);transition:border-color .2s,box-shadow .2s}
 input[type=search]:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.toast{position:fixed;left:12px;right:12px;bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:30;max-width:520px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:16px;background:#1d2621;color:#fff;font-size:.9rem;box-shadow:0 10px 30px -10px rgba(0,0,0,.5)}
+.toast button{background:rgba(255,255,255,.16);color:#fff;min-height:36px;padding:6px 12px;flex:none}
+.netbar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:30;width:max-content;max-width:94vw;padding:5px 12px;border-radius:99px;background:#6b4e16;color:#ffe9b3;font-size:.7rem;font-weight:600;text-align:center;box-shadow:0 4px 12px -4px rgba(0,0,0,.4);pointer-events:none}
+body.off main{padding-top:38px}
 </style>
 </head>
 <body>
@@ -279,7 +289,7 @@ input[type=search]:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(
     </div>
     <div class="card">
       <h2>Sauvegarde</h2>
-      <p class="sum">Exporte tes données pour les garder ou les transférer vers un autre appareil, puis colle-les dans l'appli de destination.</p>
+      <p class="sum">Exporte tes données (alimentation et musculation) pour les garder ou les transférer vers un autre appareil, puis colle-les dans l'appli de destination.</p>
       <div class="row"><button id="exp">Exporter</button><button id="copy">Copier</button><button id="imp" class="pri">Importer</button></div>
       <textarea id="bk" rows="5" aria-label="Données de sauvegarde" placeholder="Les données exportées apparaissent ici. Pour importer, colle-les ici."></textarea>
       <p class="sum" id="bkmsg" role="status"></p>
@@ -401,7 +411,8 @@ input[type=search]:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(
     impArm=false;
     D=d;D.weights=D.weights||{};if(D.goals.pk==null)D.goals.pk=1.9;if(D.goals.lk==null)D.goals.lk=0.9;
     save();$("gk").value=D.goals.k;$("gp").value=D.goals.pk;$("gl").value=D.goals.lk;all();
-    m.textContent="Sauvegarde importée.";
+    if(o.muscu&&o.muscu.routines){try{localStorage.setItem("muscu-v1",JSON.stringify(o.muscu))}catch(x){}m.textContent="Sauvegarde importée (alimentation et musculation). Rechargement…";setTimeout(function(){location.reload()},700)}
+    else m.textContent="Sauvegarde importée.";
   }
   var nf=function(x){return String(r1(x)).replace(".",",")};
   var sg=function(x){return (x>0?"+":x<0?"−":"")+nf(Math.abs(x))};
@@ -780,7 +791,7 @@ input[type=search]:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(
       var lc=it.location||{},o={price:Math.round(it.price*100)/100,psrc:(cf?"Carrefour":(lc.osm_name||"Open Prices"))+(lc.osm_address_city?" "+lc.osm_address_city:"")+(it.date?" · "+it.date:"")};
       if(it.price_per==="KILOGRAM")o.pq=1000;else if(qty>0)o.pq=qty;
       return o;
-    }catch(e){return null}
+    }catch(e){return false}
   }
   async function offQty(code){
     try{
@@ -802,37 +813,76 @@ input[type=search]:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(
     if(np.code){
       var pr=await fetchPrice(np.code,pqty);
       if(pr){applyPrice(np,pr);note+=" "+priceNote(np,pr)}
+      else if(pr===false){np.needp=1;note+=" Hors ligne : le prix sera récupéré à la reconnexion."}
       else note+=" Aucun prix trouvé : tu peux le saisir dans l\'onglet Prix.";
     }
     D.products.push(np);save();sel=np;view="qty";msg=note;renderDlg();
+  }
+  async function fetchInfo(code){
+    try{
+      var r=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+"?fields=product_name,brands,nutriments,product_quantity,quantity"),j=await r.json();
+      if(j.status===1&&j.product){
+        var pd=j.product,n=pd.nutriments||{},br=(pd.brands||"").split(",")[0].trim(),kc=n["energy-kcal_100g"];
+        if(kc==null&&n["energy_100g"]!=null)kc=n["energy_100g"]/4.184;
+        return {info:{code:code,name:(pd.product_name||"")+(br?" ("+br+")":""),k:kc!=null?r1(kc):null,p:r1(n["proteins_100g"]||0),c:r1(n["carbohydrates_100g"]||0),l:r1(n["fat_100g"]||0),f:r1(n["fiber_100g"]||0),q:pd.quantity,pqty:num(pd.product_quantity)}};
+      }
+      return {info:null};
+    }catch(e){return {err:true}}
   }
   async function lookup(code){
     code=(code||"").trim();if(!code)return;
     var p=D.products.filter(function(x){return x.code===code})[0],mm=$("msg");
     if(p){
       sel=p;view="qty";msg="";
-      if(!(p.price>0&&p.pq>0)){
+      if(p.pend)msg="Fiche en attente de connexion : elle sera complétée automatiquement.";
+      else if(!(p.price>0&&p.pq>0)){
         if(mm)mm.textContent="Recherche du prix…";
         var pr=await fetchPrice(code,await offQty(code));
-        if(pr){applyPrice(p,pr);save();msg=priceNote(p,pr)}
+        if(pr){applyPrice(p,pr);save();msg=priceNote(p,pr)}else if(pr===false)p.needp=1;
       }
       renderDlg();return;
     }
     if(mm)mm.textContent="Recherche sur Open Food Facts…";
-    var info=null;
-    try{
-      var r=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+"?fields=product_name,brands,nutriments,product_quantity,quantity"),j=await r.json();
-      if(j.status===1&&j.product){
-        var pd=j.product,n=pd.nutriments||{},br=(pd.brands||"").split(",")[0].trim(),kc=n["energy-kcal_100g"];
-        if(kc==null&&n["energy_100g"]!=null)kc=n["energy_100g"]/4.184;
-        info={code:code,name:(pd.product_name||"")+(br?" ("+br+")":""),k:kc!=null?r1(kc):null,p:r1(n["proteins_100g"]||0),c:r1(n["carbohydrates_100g"]||0),l:r1(n["fat_100g"]||0),f:r1(n["fiber_100g"]||0),q:pd.quantity,pqty:num(pd.product_quantity)};
-      }
-    }catch(e){}
+    var res=navigator.onLine===false?{err:true}:await fetchInfo(code),info=res.info;
+    if(res.err){
+      var ph={id:uid(),code:code,name:"Produit "+code,u:"g",k100:0,p100:0,c100:0,l100:0,f100:0,pend:1};
+      D.products.push(ph);save();sel=ph;view="qty";
+      msg="Hors ligne : le code est enregistré. Le nom, les valeurs et le prix seront complétés à la reconnexion.";
+      renderDlg();return;
+    }
     if(info&&info.k!=null){await autoAdd(info);return}
     draft={code:code,name:info?info.name:"",pq:info&&info.pqty?info.pqty:""};
     msg=info?"Produit trouvé sur Open Food Facts, mais sans valeurs nutritionnelles : complète-les.":"Code "+code+" introuvable. Renseigne les valeurs de l\'emballage : le produit sera retenu pour la prochaine fois.";
     view="new";renderDlg();
   }
+  var syncing=false;
+  async function syncPending(){
+    if(syncing||navigator.onLine===false)return;
+    syncing=true;var done=0,unk=0;
+    try{
+      for(var i=0;i<D.products.length;i++){
+        var p=D.products[i];
+        if(p.pend&&p.code){
+          var r=await fetchInfo(p.code);if(r.err)continue;
+          var on=p.name,f=r.info;
+          if(f&&f.k!=null){
+            p.name=f.name||p.name;p.u=unitFrom(f.q);p.k100=f.k;p.p100=f.p;p.c100=f.c;p.l100=f.l;p.f100=f.f||0;delete p.pend;
+            var pr=await fetchPrice(p.code,f.pqty>0?f.pqty:parseQty(f.q));
+            if(pr)applyPrice(p,pr);else if(pr===false)p.needp=1;
+            propagate(p,on);done++;
+          }else{delete p.pend;p.name="Produit inconnu ("+p.code+")";propagate(p,on);unk++}
+        }else if(p.needp&&p.code&&!(p.price>0&&p.pq>0)){
+          var r2=await fetchPrice(p.code,await offQty(p.code));
+          if(r2){applyPrice(p,r2);delete p.needp;done++}else if(r2===null)delete p.needp;
+        }
+      }
+    }catch(e){}
+    syncing=false;
+    if(done||unk){save();all();if(window.toast)window.toast(done?done+" produit"+(done>1?"s":"")+" complété"+(done>1?"s":"")+" après la reconnexion.":"Code introuvable : complète le produit dans l\'onglet Produits.")}
+  }
+  window.addEventListener("online",syncPending);
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)syncPending()});
+  setTimeout(syncPending,1500);
 
   var offRes=[];
   function offMap(h){
@@ -903,7 +953,7 @@ input[type=search]:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(
     }
     else if(t.id==="prev"||t.id==="next"){var p=date.split("-");date=iso(new Date(+p[0],+p[1]-1,+p[2]+(t.id==="next"?1:-1)));all()}
     else if(t.id==="today"){date=iso(new Date());all()}
-    else if(t.id==="exp"){var bk=$("bk");bk.value=JSON.stringify({app:"suivi-nutrition",v:1,data:D});bk.select();$("bkmsg").textContent="Données exportées. Copie ce texte et garde-le (notes, message à toi-même), ou colle-le dans l\'autre version de l\'appli."}
+    else if(t.id==="exp"){var bk=$("bk");var mu=null;try{mu=JSON.parse(localStorage.getItem("muscu-v1"))}catch(x){}bk.value=JSON.stringify({app:"suivi-nutrition",v:2,data:D,muscu:mu});bk.select();$("bkmsg").textContent="Données exportées. Copie ce texte et garde-le (notes, message à toi-même), ou colle-le dans l\'autre version de l\'appli."}
     else if(t.id==="copy"){
       var bk2=$("bk");if(!bk2.value){$("bkmsg").textContent="Clique d\'abord sur Exporter.";return}
       bk2.select();
@@ -965,7 +1015,7 @@ input[type=search]:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(
         ["code","u","pw","price","pq"].forEach(function(f){if(p[f]===undefined||p[f]==="")delete ex[f];else ex[f]=p[f]});
         ex.name=p.name;NF.forEach(function(f){ex[f]=p[f]});
         if(p.psrc)ex.psrc=p.psrc;else delete ex.psrc;
-        propagate(ex,on);save();editP=null;$("dlg").close();all();return;
+        delete ex.pend;propagate(ex,on);save();editP=null;$("dlg").close();all();return;
       }
       D.products.push(p);
       if(p.pw){sel=Object.assign({},p,{lastu:"piece",lastq:1});view="qty";renderDlg()}else addEntry(p,q2);
@@ -1169,12 +1219,16 @@ function ring(){
     });
   }catch(e){}
 }
-function startRest(sec){audio();restEnd=Date.now()+sec*1000;restTotal=sec;$("rest").hidden=false;tickRest()}
-function stopRest(){restEnd=0;$("rest").hidden=true}
+function swPost(m){try{if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage(m)}catch(e){}}
+function askNotif(){try{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission()}catch(e){}}
+function saveRest(){try{localStorage.setItem("rest-end",JSON.stringify({end:restEnd,total:restTotal}))}catch(e){}swPost({type:"rest",end:restEnd,body:"C\'est reparti pour la série suivante."})}
+function clearRest(){try{localStorage.removeItem("rest-end")}catch(e){}swPost({type:"rest-cancel"})}
+function startRest(sec){audio();askNotif();restEnd=Date.now()+sec*1000;restTotal=sec;$("rest").hidden=false;saveRest();tickRest()}
+function stopRest(){restEnd=0;$("rest").hidden=true;clearRest()}
 function tickRest(){
   if(!restEnd)return;
   var left=Math.ceil((restEnd-Date.now())/1000);
-  if(left<=0){restEnd=0;ring();$("rtime").textContent="Terminé !";$("rfill").style.width="100%";setTimeout(function(){if(!restEnd)$("rest").hidden=true},3000);return}
+  if(left<=0){restEnd=0;clearRest();ring();$("rtime").textContent="Terminé !";$("rfill").style.width="100%";setTimeout(function(){if(!restEnd)$("rest").hidden=true},3000);return}
   $("rtime").textContent=fmtT(left);$("rfill").style.width=Math.min(100,(1-left/restTotal)*100)+"%";
 }
 function keepAwake(){try{if(navigator.wakeLock&&G.live)navigator.wakeLock.request("screen").then(function(l){wl=l},function(){})}catch(e){}}
@@ -1393,8 +1447,8 @@ $("gym").addEventListener("click",function(e){
       if(secs)startRest(secs);
     }
   }
-  else if(a==="rm15"&&restEnd){restEnd-=15000;restTotal=Math.max(1,restTotal-15);tickRest()}
-  else if(a==="rp15"&&restEnd){restEnd+=15000;restTotal+=15;tickRest()}
+  else if(a==="rm15"&&restEnd){restEnd-=15000;restTotal=Math.max(1,restTotal-15);tickRest();saveRest()}
+  else if(a==="rp15"&&restEnd){restEnd+=15000;restTotal+=15;tickRest();saveRest()}
   else if(a==="rskip")stopRest();
   else if(a==="hdel"){if(armBtn(t,"h"+t.dataset.sid,"Confirmer la suppression")){G.sessions=G.sessions.filter(function(x){return x.id!==t.dataset.sid});save();renderG()}}
   else if(a==="pm"||a==="nm"){statM=mkey(new Date(+statM.slice(0,4),+statM.slice(5)-1+(a==="nm"?1:-1),1));renderG()}
@@ -1416,10 +1470,13 @@ $("gym").addEventListener("input",function(e){
   else if(t.classList.contains("gq")){pickQ=t.value;$("glist").innerHTML=pickList();$("gnew").innerHTML=newRow()}
 });
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&G.live)keepAwake()});
-setInterval(function(){if($("gym").hidden)return;tickClock();tickRest()},500);
+setInterval(function(){if(!$("gym").hidden)tickClock();tickRest()},500);
+try{var rs=JSON.parse(localStorage.getItem("rest-end"));if(rs&&rs.end>Date.now()){restEnd=rs.end;restTotal=rs.total;$("rest").hidden=false}else if(rs)localStorage.removeItem("rest-end")}catch(e){}
 renderG();
 })();
 </script>
+<div id="netbar" class="netbar" hidden>Hors ligne : tout fonctionne, la synchronisation reprendra à la reconnexion</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 <script>
 (function(){
   function setSec(x){
@@ -1427,11 +1484,22 @@ renderG();
     document.body.dataset.sec=x;
     document.querySelectorAll("button[data-sec]").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.sec===x)});
     try{localStorage.setItem("app-sec",x)}catch(e){}
+    var tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.content=x==="gym"?"#0d1015":(getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()||"#f5f6f3");
     window.scrollTo(0,0);
   }
   document.addEventListener("click",function(e){var b=e.target.closest("button[data-sec]");if(b)setSec(b.dataset.sec)});
   var x="food";try{x=localStorage.getItem("app-sec")||"food"}catch(e){}
+  window.toast=function(msg,label,fn){
+    var t=document.getElementById("toast");t.innerHTML="";var sp=document.createElement("span");sp.textContent=msg;t.appendChild(sp);
+    if(label){var b=document.createElement("button");b.textContent=label;b.onclick=function(){t.hidden=true;if(fn)fn()};t.appendChild(b)}
+    t.hidden=false;clearTimeout(window.__tt);window.__tt=setTimeout(function(){t.hidden=true},label?12000:5000);
+  };
+  function net(){var off=navigator.onLine===false;document.getElementById("netbar").hidden=!off;document.body.classList.toggle("off",off)}
+  window.addEventListener("online",net);window.addEventListener("offline",net);net();
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
   setSec(x);
+  if("serviceWorker" in navigator&&navigator.serviceWorker.controller)navigator.serviceWorker.addEventListener("controllerchange",function(){window.toast("Une nouvelle version est prête.","Recharger",function(){location.reload()})});
+  if("serviceWorker" in navigator&&/^https?:/.test(location.protocol))window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
 })();
 </script>
 </body>
