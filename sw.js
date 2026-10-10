@@ -1,6 +1,6 @@
 /* Service worker : fonctionne hors connexion, se met à jour dès qu'il y a du réseau,
    et prévient quand le repos est terminé même si l'appli est en arrière-plan. */
-const V = "forme-v15";
+const V = "forme-v16";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 let restId = 0, restCancelled = false;
 
