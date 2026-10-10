@@ -1712,10 +1712,11 @@ $("gym").addEventListener("click",function(e){
   else if(a==="rmset"){if(ex.sets.length>1){ex.sets.splice(+t.closest(".st").dataset.j,1);save();renderG()}}
   else if(a==="ck"){
     var rw=t.closest(".st"),jj=+rw.dataset.j,st=ex.sets[jj],c=isCardio(ex.n),pv=lastPerf(ex.n),pp=pv[jj]||pv[pv.length-1];
-    if(!st.d&&!st.r&&pp){
-      if(c)CF[ckind(ex.n)].forEach(function(f){st[f[0]]=pp[f[0]]||0});else{st.r=pp.r;st.w=pp.w}
+    if(!st.d&&pp){
+      (c?CF[ckind(ex.n)].map(function(q){return q[0]}):["r","w"]).forEach(function(o){if(!st["x"+o]&&!st[o])st[o]=pp[o]||0});
       var ins=rw.querySelectorAll?rw.querySelectorAll("input"):[];
       for(var q=0;q<ins.length;q++){var f=ins[q].dataset.f||(ins[q].classList.contains("gr")?"r":"w");ins[q].value=st[f]||""}
+      var mk=rw.querySelector(".mkw");if(mk)mk.innerHTML=mark(st,jj,pv,c);
     }
     if(!st.d&&!st.r){var ri=rw.querySelector("input");if(ri&&ri.focus)ri.focus();return}
     st.d=!st.d;t.classList.toggle("on",st.d);save();
@@ -1738,8 +1739,14 @@ $("gym").addEventListener("change",function(e){
   if(cl.contains("drmin")||cl.contains("drsec")){var p=t.closest(".rt");G.rest=Math.floor(num(p.querySelector(".drmin").value))*60+Math.min(59,Math.floor(num(p.querySelector(".drsec").value)));save()}
   else if(!ex)return;
   else if(cl.contains("gr")||cl.contains("gw")||cl.contains("cv")){
-    var row=t.closest(".st"),j=+row.dataset.j,s=ex.sets[j],f=cl.contains("gr")?"r":cl.contains("gw")?"w":t.dataset.f;
-    s[f]=num(t.value);save();row.querySelector(".mkw").innerHTML=mark(s,j,lastPerf(ex.n),isCardio(ex.n));
+    var row=t.closest(".st"),j=+row.dataset.j,s=ex.sets[j],f=cl.contains("gr")?"r":cl.contains("gw")?"w":t.dataset.f,c0=isCardio(ex.n),pv0=lastPerf(ex.n),pp0=pv0[j]||pv0[pv0.length-1];
+    s[f]=num(t.value);s["x"+f]=true;
+    if(pp0)(c0?CF[ckind(ex.n)].map(function(q){return q[0]}):["r","w"]).forEach(function(o){
+      if(o===f||s["x"+o]||s[o])return;
+      s[o]=pp0[o]||0;
+      var el=row.querySelector(c0?'input[data-f="'+o+'"]':(o==="r"?".gr":".gw"));if(el)el.value=s[o]||"";
+    });
+    save();row.querySelector(".mkw").innerHTML=mark(s,j,pv0,c0);
   }
   else if(cl.contains("rmin")||cl.contains("rsec")||cl.contains("emin")||cl.contains("esec")){ex.rest=mmss(card,"rmin","rsec");ex.restEx=mmss(card,"emin","esec");save()}
 });
